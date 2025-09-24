@@ -22,4 +22,4 @@ class Project(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "toolkit") # for find_package(toolkit)
         self.cpp_info.cxxflags = ["-fno-rtti"]
-        self.cpp_info.libs = ["toolkit"]
+        self.cpp_info.set_property("header_only", True)
