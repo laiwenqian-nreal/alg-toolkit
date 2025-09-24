@@ -16,7 +16,7 @@ class Project(ConanFile):
         self.revision_mode = base.revision_mode
 
     def requirements(self):
-        self.requires("framework/develop", transitive_headers=True, transitive_libs=True)
+        self.requires(super().override_require("framework/develop"), run=True)
 
 
     def package_info(self):
