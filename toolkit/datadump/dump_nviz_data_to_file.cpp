@@ -316,8 +316,8 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
 
   if (save_dir_.empty()) {
     // get absolute wall time
-    auto now = std::chrono::system_clock::now();
-    // 创建日期目录
+    
+    // auto now = std::chrono::system_clock::now();创建日期目录
     if (access(save_dir_.c_str(), 0) != 0) {
       if (MKDIR(save_dir_.c_str()) != 0) {
         DLOG_ERROR("{} Error creating directory: {} {} {}", log_prefix,
