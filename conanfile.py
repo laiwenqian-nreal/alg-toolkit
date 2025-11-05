@@ -18,6 +18,7 @@ class Project(ConanFile):
 
     def requirements(self):
         self.requires(super().override_require("framework/develop"), run=True)
+        self.requires("eigen/3.3.7")
 
     def package_info(self):
         # for find_package(toolkit)
