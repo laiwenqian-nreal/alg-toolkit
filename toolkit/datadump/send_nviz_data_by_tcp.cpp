@@ -51,8 +51,8 @@ bool XrealLinkTcp::connectServer() {
     return true;
   }
 
-  char time_format[80];
-  getNowTimeFormat(time_format);
+  // char time_format[80];
+  // getNowTimeFormat(time_format);
 
   DLOG_TRACE("{} sockfd:{} addr:{} port:{} in connectServer. {} {}", log_prefix,
              sockfd, inet_ntoa(server_addr.sin_addr),
@@ -229,8 +229,8 @@ bool XrealLinkTcp::tcpIpSendPacketMsg(DataBuffer msg) {
     DLOG_WARN("{} msg.size() <= 1 in tcpIpSendPacketMsg.", log_prefix);
     return true;
   }
-  char time_format[80];
-  getNowTimeFormat(time_format);
+  // char time_format[80];
+  // getNowTimeFormat(time_format);
 
   if (send(sockfd, (const char *)msg.data(), msg.size(), 0) >= 0) {
     char receiveMessage[100] = {};
