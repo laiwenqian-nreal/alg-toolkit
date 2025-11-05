@@ -233,18 +233,6 @@ void XrealLinkCommon::publishQueueSizeInfo(
     float data[6];
   };
 
-  QueueSizeData queue_size_data_group;
-
-  queue_size_data_group.onsensor_timestamp_us = onsensor_timestamp_us;
-  queue_size_data_group.timestamp_ns = timestamp_ns;
-  queue_size_data_group.type = 24; // 队列大小信息类型
-  queue_size_data_group.data[0] = static_cast<float>(collect_queue_size);
-  queue_size_data_group.data[1] = static_cast<float>(send_queue_size);
-  queue_size_data_group.data[2] = -1;
-  queue_size_data_group.data[3] = -1;
-  queue_size_data_group.data[4] = -1;
-  queue_size_data_group.data[5] = -1;
-
   QueueSizeData queue_count_data_struct;
   queue_count_data_struct.onsensor_timestamp_us = onsensor_timestamp_us;
   queue_count_data_struct.timestamp_ns = timestamp_ns;
@@ -257,27 +245,14 @@ void XrealLinkCommon::publishQueueSizeInfo(
   queue_count_data_struct.data[5] = -1;
 
   // 直接创建SimpleMessageHeader并调用processGroupMsg
-  SimpleMessageHeader msg_header;
-  msgInit(msg_header, group_id, 10, sizeof(QueueSizeData),
-          0); // msg_id=10 for queue size info
-
-  // 创建完整的消息缓冲区
-  DataBuffer device_id_count;
-  msgSetBuf(msg_header, device_id_count, (const char *)&queue_size_data_group,
-            sizeof(QueueSizeData));
-
-  // 直接调用processGroupMsg发送
-  freq_count++;
-  group_msg.insert(group_msg.end(), device_id_count.begin(),
-                   device_id_count.end());
-
   SimpleMessageHeader msg_header_count;
   msgInit(msg_header_count, XREAL_LINK_COUNT_GROUP_ID, 1, sizeof(QueueSizeData),
           0); // msg_id=11 for queue count info
+  // 创建完整的消息缓冲区
   DataBuffer queue_count_data;
   msgSetBuf(msg_header_count, queue_count_data,
             (const char *)&queue_count_data_struct, sizeof(QueueSizeData));
-
+  // 直接调用processGroupMsg发送
   group_msg.insert(group_msg.end(), queue_count_data.begin(),
                    queue_count_data.end());
   freq_count++;
