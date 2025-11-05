@@ -35,7 +35,7 @@ namespace datadump {
 
 XrealLinkOnlySaveFile::XrealLinkOnlySaveFile(std::string save_dir) {
   log_prefix = "[xreal_link_file]";
-  save_dir_ = save_dir + (save_dir.back() == '/' ? "" : "/");
+  save_dir_ = save_dir + (save_dir.empty() || (save_dir.back() == '/') ? "" : "/");
 
   // Create or clear the directory
 #ifdef _WIN32
