@@ -1,0 +1,39 @@
+syntax = "proto3";
+package alg.v1;
+
+message ChunkMeta {
+  uint64 group_id = 1;
+  uint64 msg_id   = 2;
+  uint64 seq = 3;      // 序号，幂等/断点续传
+  string note  = 4;    // 可选备注
+}
+
+message RawImuDataDump {
+  uint64 onsensor_timestamp_us = 1;
+  uint64 timestamp_ns = 2;
+  uint32 type = 3;
+  float data_1 = 4;
+  float data_2 = 5;
+  float data_3 = 6;
+  float data_4 = 7;
+  float data_5 = 8;
+  float data_6 = 9;
+}
+
+message DataChunk {
+  ChunkMeta meta = 1;
+  RawImuDataDump data = 2;
+}
+
+message Ack {
+  uint64 last_seq = 1;
+  string note     = 2;
+}
+
+service AlgService {
+  // 一次性发送
+  rpc SendOnce(DataChunk) returns (Ack);
+
+  // 流式发送
+  rpc Upload(stream DataChunk) returns (Ack);
+}
