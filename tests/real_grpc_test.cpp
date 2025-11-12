@@ -1,6 +1,11 @@
-#include "../toolkit/datadump/protobuf_grpc/send_nviz_data_by_protobuf_grpc.h"
+#include "../toolkit/datadump/send_nviz_data_by_grpc.h"
 #include <chrono>
 #include <iostream>
+#include <fstream>
+#include <libgen.h>   // dirname
+#include <unistd.h>   // realpath
+#include <limits.h>   // PATH_MAX
+#include <iomanip>   // std::setw, std::setfill
 #include <thread>
 
 using namespace xreal::toolkits::datadump;
@@ -11,48 +16,50 @@ int main() {
     try {
         std::string target = "localhost:50051";
         std::cout << "make_stub for " << target << std::endl;
-        auto stub = make_stub(target);
+        auto stub = XrealLinkgRPC::make_stub(target);
 
-        for (int i = 0; i < 1000000000; ++i) {
+        // 这里i受限于images目录中的pgm图片数量
+        for (int i = 0; i <= 20; ++i) {
 
             RawImuDataDumpStruct gyro_values;
-
-            float x = i * 0.5;
-            float y = i * 1.0;
-            float z = i * 1.5;
-
             gyro_values.onsensor_timestamp_us = get_current_timestamp_us();
-            gyro_values.timestamp_ns = i * 1000000; // 模拟纳秒时间戳
-            gyro_values.type =
-                DumpSensorType::DUMP_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED; // 示例类型
-            gyro_values.data[0] = x;
-            gyro_values.data[1] = y;
-            gyro_values.data[2] = z;
+            gyro_values.timestamp_ns = i; // 模拟时间戳
+            gyro_values.type = DumpSensorType::DUMP_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED; // 示例类型
+            gyro_values.data[0] = i * 0.5;
+            gyro_values.data[1] = i * 1.0;
+            gyro_values.data[2] = i * 1.5;
             gyro_values.data[3] = 0;
             gyro_values.data[4] = 0;
             gyro_values.data[5] = 0;
 
-            auto ack1 = send_once(*stub, gyro_values);
+            auto ack1 = XrealLinkgRPC::send_RawImuData(*stub, gyro_values);
             
-            // RawImuDataDumpStruct accel_values;
-            // accel_values.onsensor_timestamp_us = get_current_timestamp_us();
-            // accel_values.timestamp_ns = i * 1000000; // 模拟纳秒时间戳
-            // accel_values.type = DumpSensorType::
-            //     DUMP_SENSOR_TYPE_ACCELEROMETER_UNCALIBRATED; // 示例类型
-            // accel_values.data[0] = x * 2;
-            // accel_values.data[1] = y * 2;
-            // accel_values.data[2] = z * 2;
-            // accel_values.data[3] = 0;
-            // accel_values.data[4] = 0;
-            // accel_values.data[5] = 0;
-            
-            // std::vector<RawImuDataDumpStruct> blocks;
-            // blocks.push_back(gyro_values);
-            // blocks.push_back(accel_values);
-            // auto ack2 = upload_stream(*stub, blocks);
+            size_t len = 1024 * 100;
+            std::vector<uint8_t> buf(len);
+            for (size_t j = 0; j < len; j++) buf[j] = static_cast<uint8_t>(j % 256);
+
+            auto ack2 = XrealLinkgRPC::send_BinaryData(*stub, get_current_timestamp_us(), i, len, buf);
+
+            std::ostringstream oss;
+            oss << "m" << std::setw(7) << std::setfill('0') << i << ".pgm";
+            std::string filename = oss.str();
+            char abs_src[PATH_MAX];
+            if (!realpath(__FILE__, abs_src)) throw std::runtime_error("realpath(__FILE__) failed");
+            char dirbuf[PATH_MAX];
+            std::snprintf(dirbuf, sizeof(dirbuf), "%s", abs_src);
+            char* src_dir = dirname(dirbuf);
+            std::string full_path = std::string(src_dir) + "/images/" + filename;
+            std::ifstream f(full_path, std::ios::binary | std::ios::ate);
+            if (!f) throw std::runtime_error("open failed");
+            std::streamsize n = f.tellg();
+            f.seekg(0);
+            std::string buffer(n, '\0');
+            f.read(buffer.data(), n);
+
+            auto ack3 = XrealLinkgRPC::send_ImageData(*stub, get_current_timestamp_us(), i, filename, buffer);
 
             // 间隔一段时间
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
         std::cout << "Protobuf + gRPC send test completed!" << std::endl;
         

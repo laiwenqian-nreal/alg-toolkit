@@ -1,14 +1,7 @@
 syntax = "proto3";
 package alg.v1;
 
-message ChunkMeta {
-  uint64 group_id = 1;
-  uint64 msg_id   = 2;
-  uint64 seq = 3;      // 序号，幂等/断点续传
-  string note  = 4;    // 可选备注
-}
-
-message RawImuDataDump {
+message RawImuData {
   uint64 onsensor_timestamp_us = 1;
   uint64 timestamp_ns = 2;
   uint32 type = 3;
@@ -20,20 +13,27 @@ message RawImuDataDump {
   float data_6 = 9;
 }
 
-message DataChunk {
-  ChunkMeta meta = 1;
-  RawImuDataDump data = 2;
+message BinaryData {
+  uint64 onsensor_timestamp_us = 1;
+  uint64 timestamp_ns = 2;
+  uint32 data_len = 3;
+  bytes payload = 4;
+}
+
+message ImageData {
+  uint64 onsensor_timestamp_us = 1;
+  uint64 timestamp_ns = 2;
+  string filename = 3; // 原文件名/标识
+  bytes image_binary_data = 4;
 }
 
 message Ack {
-  uint64 last_seq = 1;
-  string note     = 2;
+  string note = 1;
 }
 
 service AlgService {
   // 一次性发送
-  rpc SendOnce(DataChunk) returns (Ack);
-
-  // 流式发送
-  rpc Upload(stream DataChunk) returns (Ack);
+  rpc SendRawImuData(RawImuData) returns (Ack);
+  rpc SendBinaryData(BinaryData) returns (Ack);
+  rpc SendImageDate(ImageData) returns (Ack);
 }
