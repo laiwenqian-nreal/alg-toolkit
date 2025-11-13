@@ -21,7 +21,11 @@ class Project(ConanFile):
         self.requires("eigen/3.3.7")
         self.requires("grpc/1.72.1")
         self.requires("protobuf/5.27.0")
-
+    
+    def build_requirements(self):
+        super().build_requirements()
+        self.tool_requires("protobuf/5.27.0")
+    
     def package_info(self):
         # for find_package(toolkit)
         self.cpp_info.set_property("cmake_file_name", "toolkit")
