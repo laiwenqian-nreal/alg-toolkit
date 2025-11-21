@@ -46,8 +46,8 @@ protected:
   std::string save_dir_ = "";
 
   // 批量写入配置
-  static const size_t BUFFER_SIZE_LIMIT = 8192; // 8KB缓冲区
-  static const size_t BUFFER_COUNT_LIMIT = 100; // 100条记录
+  static const size_t BUFFER_SIZE_LIMIT = 1024; // 8KB缓冲区
+  static const size_t BUFFER_COUNT_LIMIT = 10; // 100条记录
   std::map<std::string, size_t> filename_to_count_; // 使用文件名的记录计数
   std::map<std::string, std::chrono::steady_clock::time_point>
       filename_to_last_flush_; // 使用文件名的上次刷新时间

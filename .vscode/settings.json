@@ -57,6 +57,7 @@
         "condition_variable": "cpp",
         "numeric": "cpp",
         "thread": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "span": "cpp"
     }
 }

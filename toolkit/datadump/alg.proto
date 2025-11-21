@@ -1,30 +1,34 @@
 syntax = "proto3";
 package alg.v1;
 
+message NvizHeader {
+  uint64 group_id = 1;
+  uint64 msg_id = 2;
+  uint64 onsensor_timestamp_us = 3;
+  uint64 timestamp_ns = 4;
+}
+
 message RawImuData {
-  uint64 onsensor_timestamp_us = 1;
-  uint64 timestamp_ns = 2;
-  uint32 type = 3;
-  float data_1 = 4;
-  float data_2 = 5;
-  float data_3 = 6;
-  float data_4 = 7;
-  float data_5 = 8;
-  float data_6 = 9;
+  NvizHeader header = 1;
+  uint32 type = 2;
+  float data_1 = 3;
+  float data_2 = 4;
+  float data_3 = 5;
+  float data_4 = 6;
+  float data_5 = 7;
+  float data_6 = 8;
 }
 
 message BinaryData {
-  uint64 onsensor_timestamp_us = 1;
-  uint64 timestamp_ns = 2;
-  uint32 data_len = 3;
-  bytes payload = 4;
+  NvizHeader header = 1;
+  uint32 data_len = 2;
+  bytes payload = 3;
 }
-
+// TODO 最好和谭桥代码统一
 message ImageData {
-  uint64 onsensor_timestamp_us = 1;
-  uint64 timestamp_ns = 2;
-  string filename = 3; // 原文件名/标识
-  bytes image_binary_data = 4;
+  NvizHeader header = 1;
+  string filename = 2; // 原文件名/标识
+  bytes image_binary_data = 3;
 }
 
 message Ack {
@@ -35,5 +39,5 @@ service AlgService {
   // 一次性发送
   rpc SendRawImuData(RawImuData) returns (Ack);
   rpc SendBinaryData(BinaryData) returns (Ack);
-  rpc SendImageDate(ImageData) returns (Ack);
+  rpc SendImageData(ImageData) returns (Ack);  // 修正拼写: Date -> Data
 }
