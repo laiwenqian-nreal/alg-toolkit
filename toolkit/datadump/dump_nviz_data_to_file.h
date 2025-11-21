@@ -53,7 +53,10 @@ protected:
       filename_to_last_flush_; // 使用文件名的上次刷新时间
   static constexpr std::chrono::milliseconds FLUSH_INTERVAL{50}; // 50ms强制刷新
 
-  XrealLinkOnlySaveFile(std::string save_dir);
+  // 实例级别的数据结构管理器
+  DataStructureManager structure_manager_;
+
+  XrealLinkOnlySaveFile(std::string save_dir, bool ignore_onsensor_timestamp);
 
 public:
   ~XrealLinkOnlySaveFile();
@@ -98,6 +101,9 @@ private:
 
 public:
   static XrealLinkOnlySaveFile *getInstance(const std::string &save_dir = "./");
+
+  // 设置全局配置：是否忽略 onsensor_timestamp_us 字段
+  static void setIgnoreOnsensorTimestamp(bool ignore);
 
   void setMapMsgIdToFilename(const uint64_t group_id, const uint64_t msg_id,
                              const std::string &filename);

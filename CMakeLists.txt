@@ -60,3 +60,11 @@ include(Project)
 ######################################################################################
 # Set git hook
 execute_process(COMMAND git config core.hooksPath external/project/githook)
+
+######################################################################################
+##  							APPS												##
+######################################################################################
+# Add applications directory
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/apps/CMakeLists.txt)
+    add_subdirectory(apps)
+endif()

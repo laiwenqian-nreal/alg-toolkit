@@ -3,10 +3,10 @@ set -euo pipefail
 
 BUILD_TYPE="${1:-Release}"
 
-# 脚本所在目录（grpc_to_so）
+# 脚本所在目录（apps/grpc_to_so）
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
-# 项目根目录 alg-toolkit（grpc_to_so 的上一级）
-ROOT_DIR="$(realpath "$SCRIPT_DIR/..")"
+# 项目根目录 toolkit（apps/grpc_to_so 的上两级）
+ROOT_DIR="$(realpath "$SCRIPT_DIR/../..")"
 
 # 需要传给 grpc_to_so/CMakeLists 的三个路径
 DATADUMP_SRC_DIR="$ROOT_DIR/toolkit/datadump"

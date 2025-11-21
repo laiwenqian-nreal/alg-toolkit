@@ -48,6 +48,14 @@ enum DumpSensorType {
   DUMP_SENSOR_TYPE_UNDEFINE,
 };
 
+// 原始 IMU 数据结构
+struct RawImuDataDumpStruct {
+  uint64_t onsensor_timestamp_us;
+  uint64_t timestamp_ns;
+  uint32_t type;
+  float data[6];
+};
+
 // 数据字段定义
 struct DataField {
   std::string type;    // u64, u32, f32 等
@@ -76,13 +84,6 @@ struct DataStructure {
   std::string getName() const { return name; }
 };
 
-struct RawImuDataDumpStruct {
-  uint64_t onsensor_timestamp_us;
-  uint64_t timestamp_ns;
-  uint32_t type;
-  float data[6];
-};
-
 // 数据结构管理器
 class DataStructureManager {
 private:
@@ -96,11 +97,12 @@ private:
                                           const std::string &key);
 
 public:
-  DataStructureManager();
+  DataStructureManager(bool ignore_onsensor_timestamp = false);
 
   DataStructureManager(
       const std::string &data_struct,
-      const std::map<uint64_t, std::string> &group_msg_id_to_field_definitions);
+      const std::map<uint64_t, std::string> &group_msg_id_to_field_definitions,
+      bool ignore_onsensor_timestamp = false);
 
   // 从JSON字符串加载数据结构
   bool loadFromJsonString(const std::string &json_config);

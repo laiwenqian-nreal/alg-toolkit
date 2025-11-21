@@ -60,12 +60,12 @@ void DataStructure::calculateSize() {
 }
 
 // DataStructureManager implementation
-DataStructureManager::DataStructureManager() {
+DataStructureManager::DataStructureManager(bool ignore_onsensor_timestamp) {
   std::shared_ptr<DataStructure> raw_imu_data_struct =
       std::make_shared<DataStructure>();
   raw_imu_data_struct->name = "RawImuDataDumpStruct";
   raw_imu_data_struct->fields = {
-      {"u64", "onsensor_timestamp_us", "us", 1, false},
+      {"u64", "onsensor_timestamp_us", "us", 1, ignore_onsensor_timestamp},
       {"u64", "timestamp_ns", "ns", 1, false},
       {"u32", "type", "", 1, false},
       {"f32", "data0", "", 1, false},
@@ -80,13 +80,14 @@ DataStructureManager::DataStructureManager() {
 
 DataStructureManager::DataStructureManager(
     const std::string &data_struct,
-    const std::map<uint64_t, std::string> &group_msg_id_to_field_definitions) {
+    const std::map<uint64_t, std::string> &group_msg_id_to_field_definitions,
+    bool ignore_onsensor_timestamp) {
 
   std::shared_ptr<DataStructure> raw_imu_data_struct =
       std::make_shared<DataStructure>();
   raw_imu_data_struct->name = "RawImuDataDumpStruct";
   raw_imu_data_struct->fields = {
-      {"u64", " onsensor_timestamp_us", "us", 1, false},
+      {"u64", " onsensor_timestamp_us", "us", 1, ignore_onsensor_timestamp},
       {"u64", " timestamp_ns", "ns", 1, false},
       {"u32", " type", "", 1, false},
       {"f32", " data0", "", 1, false},
@@ -232,6 +233,15 @@ bool DataStructureManager::loadFromJsonString(const std::string &json_config) {
           field.type = words[0];
           field.name = words[1];
 
+          // 检查是否需要忽略该字段（IGNORE_ 或 HIDE 前缀）
+          if (field.name.find("IGNORE_") == 0 || field.name.find("HIDE") != std::string::npos) {
+            field.ignore = true;
+            // 移除 IGNORE_ 前缀以保留实际字段名
+            if (field.name.find("IGNORE_") == 0) {
+              field.name = field.name.substr(7); // 去掉 "IGNORE_"
+            }
+          }
+
           // 处理数组类型 name[size]
           if (field.name.find("[") != std::string::npos) {
             size_t bracket_start = field.name.find("[");
@@ -242,11 +252,6 @@ bool DataStructureManager::loadFromJsonString(const std::string &json_config) {
               field.array_size = std::stoi(size_str);
               field.name = field.name.substr(0, bracket_start);
             }
-          }
-
-          // 检查隐藏字段
-          if (field.name.find("HIDE") != std::string::npos) {
-            field.ignore = true;
           }
 
           data_struct->fields.push_back(field);
@@ -308,25 +313,30 @@ std::string DataStructureManager::parseDataToCsv(uint32_t group_id,
 
   std::string csv_line;
   size_t offset = 0;
+  bool first_field = true;
 
   for (size_t i = 0; i < structure->fields.size(); ++i) {
     const auto &field = structure->fields[i];
 
-    if (field.array_size == 1) {
-      csv_line += field.toString(data, offset);
-    } else {
-      // 处理数组
-      for (int j = 0; j < field.array_size; ++j) {
-        csv_line += field.toString(
-            data, offset + j * (field.getSize() / field.array_size));
-        if (j < field.array_size - 1) {
-          csv_line += ",";
+    // 跳过标记为 ignore 的字段
+    if (!field.ignore) {
+      if (!first_field) {
+        csv_line += ",";
+      }
+      first_field = false;
+
+      if (field.array_size == 1) {
+        csv_line += field.toString(data, offset);
+      } else {
+        // 处理数组
+        for (int j = 0; j < field.array_size; ++j) {
+          csv_line += field.toString(
+              data, offset + j * (field.getSize() / field.array_size));
+          if (j < field.array_size - 1) {
+            csv_line += ",";
+          }
         }
       }
-    }
-
-    if (i < structure->fields.size() - 1) {
-      csv_line += ",";
     }
 
     offset += field.getSize();
@@ -347,22 +357,28 @@ std::string DataStructureManager::generateCsvHeader(uint32_t group_id,
   }
 
   std::string header;
+  bool first_field = true;
+  
   for (size_t i = 0; i < structure->fields.size(); ++i) {
     const auto &field = structure->fields[i];
 
-    if (field.array_size == 1) {
-      header += field.name;
-    } else {
-      for (int j = 0; j < field.array_size; ++j) {
-        header += field.name + "[" + std::to_string(j) + "]";
-        if (j < field.array_size - 1) {
-          header += ", ";
+    // 跳过标记为 ignore 的字段
+    if (!field.ignore) {
+      if (!first_field) {
+        header += ", ";
+      }
+      first_field = false;
+
+      if (field.array_size == 1) {
+        header += field.name;
+      } else {
+        for (int j = 0; j < field.array_size; ++j) {
+          header += field.name + "[" + std::to_string(j) + "]";
+          if (j < field.array_size - 1) {
+            header += ", ";
+          }
         }
       }
-    }
-
-    if (i < structure->fields.size() - 1) {
-      header += ", ";
     }
   }
 

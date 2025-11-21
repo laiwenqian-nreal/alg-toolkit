@@ -17,7 +17,7 @@ target_include_directories(real_tcp_test PRIVATE
 
 target_link_libraries(real_tcp_test
     framework::framework
-    ${CMAKE_CURRENT_SOURCE_DIR}/../build_native/Release/toolkit/datadump/libdatadump.a
+    ${CMAKE_BINARY_DIR}/toolkit/datadump/libdatadump.a
 )
 
 add_executable(real_file_test 
@@ -30,7 +30,7 @@ target_include_directories(real_file_test PRIVATE
 
 target_link_libraries(real_file_test
     framework::framework
-    ${CMAKE_CURRENT_SOURCE_DIR}/../build_native/Release/toolkit/datadump/libdatadump.a
+    ${CMAKE_BINARY_DIR}/toolkit/datadump/libdatadump.a
 )
 
 # 构建所有测试的目标
