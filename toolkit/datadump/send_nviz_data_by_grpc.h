@@ -11,6 +11,7 @@ using alg::v1::Ack;
 using alg::v1::AlgService;
 using alg::v1::BinaryData;
 using alg::v1::ImageData;
+using alg::v1::LatencyData;
 using alg::v1::RawImuData;
 
 namespace xreal {
@@ -63,18 +64,23 @@ private:
 
   // 发送 RawImuData
   bool sendRawImuData(uint32_t group_id, uint32_t msg_id,
-                      uint64_t onsensor_timestamp_us, uint64_t timestamp_ns,
-                      uint32_t type, const float *data, size_t data_count);
+                      uint64_t onsensor_timestamp_us,
+                      RawImuDataDumpStruct *data, uint32_t data_len);
+
+  // 发送 LatencyData
+  bool sendLatencyData(uint32_t group_id, uint32_t msg_id,
+                       uint64_t onsensor_timestamp_us,
+                       RawLatencyDataDumpStruct *data, uint32_t data_len);
 
   // 发送 BinaryData
   bool sendBinaryData(uint32_t group_id, uint32_t msg_id,
-                      uint64_t onsensor_timestamp_us, uint64_t timestamp_ns,
-                      const uint8_t *data, uint32_t data_len);
+                      uint64_t onsensor_timestamp_us, const uint8_t *data,
+                      uint32_t data_len);
 
   // 发送 ImageData
   bool sendImageData(uint32_t group_id, uint32_t msg_id,
-                     uint64_t onsensor_timestamp_us, uint64_t timestamp_ns,
-                     const std::string &filename, const uint8_t *data, uint32_t data_len);
+                     uint64_t onsensor_timestamp_us, const uint8_t *data,
+                     uint32_t data_len);
 };
 
 } // namespace datadump

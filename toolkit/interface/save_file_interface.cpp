@@ -8,12 +8,12 @@ using xreal::toolkits::datadump::XrealLinkOnlySaveFile;
 extern "C" {
 
 // 初始化保存文件接口
-MY_API void InitSaveFile(const char *save_dir, bool ignore_onsensor_timestamp) {
+MY_API void InitSaveFile(const char *save_dir, bool add_header) {
   if (save_dir == nullptr) {
     save_dir = "./data";
   }
   // 设置全局配置
-  XrealLinkOnlySaveFile::setIgnoreOnsensorTimestamp(ignore_onsensor_timestamp);
+  XrealLinkOnlySaveFile::setAddHeader(add_header);
   XrealLinkOnlySaveFile::getInstance(save_dir);
 }
 // 设置group_id和msg_id对应的文件名

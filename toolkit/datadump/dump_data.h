@@ -1,7 +1,11 @@
-#ifndef DATA_STRUCTURE_INTERFACE_H
-#define DATA_STRUCTURE_INTERFACE_H
+#ifndef TOOLKIT_DATADUMP_DUMP_DATA_H_
+#define TOOLKIT_DATADUMP_DUMP_DATA_H_
 
 #include <cstdint>
+namespace xreal {
+namespace toolkits {
+namespace datadump {
+// 数据缓冲区类型定义
 
 enum DumpSensorType {
   DUMP_SENSOR_TYPE_INVALID = 0,
@@ -41,12 +45,28 @@ enum DumpSensorType {
   DUMP_SENSOR_TYPE_UNDEFINE,
 };
 
+enum DumpMessageID {
+  DUMP_MESSAGE_ID_RAW_IMU_DATA = 1,
+  DUMP_MESSAGE_ID_LATENCY_DATA = 25,
+  DUMP_MESSAGE_ID_BINARY_DATA = 9999,
+  DUMP_MESSAGE_ID_IMAGE_DATA = 401,
+};
+
 // 原始 IMU 数据结构
 struct RawImuDataDumpStruct {
-  uint64_t onsensor_timestamp_us;
   uint64_t timestamp_ns;
   uint32_t type;
   float data[6];
 };
 
-#endif // DATA_STRUCTURE_INFERFACE_H
+// Latency 数据结构 - 使用 uint64_t 避免精度损失
+struct RawLatencyDataDumpStruct {
+  uint64_t timestamp_ns;
+  uint32_t type;
+  uint64_t data[6]; // 使用 uint64_t 保存时间戳，避免精度损失
+};
+
+} // namespace datadump
+} // namespace toolkits
+} // namespace xreal
+#endif // TOOLKIT_DATADUMP_DUMP_DATA_H_

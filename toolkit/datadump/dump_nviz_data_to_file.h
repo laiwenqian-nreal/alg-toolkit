@@ -56,7 +56,7 @@ protected:
   // 实例级别的数据结构管理器
   DataStructureManager structure_manager_;
 
-  XrealLinkOnlySaveFile(std::string save_dir, bool ignore_onsensor_timestamp);
+  XrealLinkOnlySaveFile(std::string save_dir, bool add_header);
 
 public:
   ~XrealLinkOnlySaveFile();
@@ -102,8 +102,7 @@ private:
 public:
   static XrealLinkOnlySaveFile *getInstance(const std::string &save_dir = "./");
 
-  // 设置全局配置：是否忽略 onsensor_timestamp_us 字段
-  static void setIgnoreOnsensorTimestamp(bool ignore);
+  static void setAddHeader(bool add_header);
 
   void setMapMsgIdToFilename(const uint64_t group_id, const uint64_t msg_id,
                              const std::string &filename);

@@ -34,12 +34,14 @@ namespace toolkits {
 namespace datadump {
 
 // 全局配置：是否忽略 onsensor_timestamp_us 字段
-static bool g_ignore_onsensor_timestamp = false;
+static bool g_add_header = false;
 
 XrealLinkOnlySaveFile::XrealLinkOnlySaveFile(std::string save_dir,
-                                             bool ignore_onsensor_timestamp)
-    : structure_manager_(ignore_onsensor_timestamp) {
+                                             bool add_header)
+    : structure_manager_() {
   log_prefix = "[xreal_link_file]";
+  // set global flag from constructor parameter
+  g_add_header = add_header;
   save_dir_ = save_dir + (save_dir.back() == '/' ? "" : "/");
 
   // Create or clear the directory
@@ -139,24 +141,22 @@ bool XrealLinkOnlySaveFile::saveMsg(DataBuffer msg) {
       break; // 不够一个消息头的大小
     }
 
-    SimpleMessageHeader *msg_header = (SimpleMessageHeader *)curDataPtr;
-    curDataPtr += sizeof(SimpleMessageHeader);
-    curLen -= sizeof(SimpleMessageHeader);
-
-    int64_t group_id = msg_header->magic;
-    int64_t msg_id = msg_header->msg_id;
-    size_t len = msg_header->payload_length;
+    SimpleMessageHeader msg_header;
+    uint8_t *payload_ptr = nullptr;
+    size_t payload_size = 0;
+    GetMsgPayload(curDataPtr, curLen, &msg_header, payload_ptr, payload_size);
     uint64_t timestamp = get_current_timestamp_us(); // 入队列时间戳(微秒)
 
-    if (curLen < len) {
+    if (payload_size < static_cast<size_t>(msg_header.payload_length)) {
       break; // 数据不完整
     }
 
-    // 使用数据结构管理器解析数据
-    saveStructuredData(group_id, msg_id, curDataPtr, len, timestamp);
+    // 使用数据结构管理器解析数据 (payload_ptr now points to payload)
+    saveStructuredData(msg_header.magic, msg_header.msg_id, payload_ptr,
+                       msg_header.payload_length, timestamp);
 
-    curDataPtr += len;
-    curLen -= len;
+    curDataPtr += sizeof(SimpleMessageHeader) + msg_header.payload_length;
+    curLen -= sizeof(SimpleMessageHeader) + msg_header.payload_length;
   }
 
   return true;
@@ -264,12 +264,12 @@ void XrealLinkOnlySaveFile::flushBuffer(const std::string &filename) {
 
 XrealLinkOnlySaveFile *
 XrealLinkOnlySaveFile::getInstance(const std::string &save_dir) {
-  static XrealLinkOnlySaveFile instance(save_dir, g_ignore_onsensor_timestamp);
+  static XrealLinkOnlySaveFile instance(save_dir, g_add_header);
   return &instance;
 }
 
-void XrealLinkOnlySaveFile::setIgnoreOnsensorTimestamp(bool ignore) {
-  g_ignore_onsensor_timestamp = ignore;
+void XrealLinkOnlySaveFile::setAddHeader(bool add_header) {
+  g_add_header = add_header;
 }
 
 void XrealLinkOnlySaveFile::setMapMsgIdToFilename(const uint64_t group_id,
@@ -335,12 +335,11 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
     }
   }
 
-  std::string filename =
-      save_dir_ + "/" + filename_prefix_ + "_local_" + file_name + ".csv";
-  if (g_ignore_onsensor_timestamp) {
-    filename = save_dir_ + "/" + file_name + ".csv";
+  std::string filename = save_dir_ + "/" + file_name + ".csv";
+  if (g_add_header) {
+    filename =
+        save_dir_ + "/" + filename_prefix_ + "_local_" + file_name + ".csv";
   }
-
   std::shared_ptr<std::ofstream> ofs_ptr;
   ofs_ptr.reset(
       new std::ofstream(filename, std::ofstream::out | std::ofstream::app));
@@ -352,7 +351,7 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
       structure_manager_.generateCsvHeader(group_id, msg_id);
   if (csv_header.empty()) {
     // 使用默认头：只有timestamp和数据
-    *ofs_ptr << "timestamp, ";
+    *ofs_ptr << "timestamp, onsensor_timestamp_us, ";
     for (int i = 0; i < 20; ++i) {
       *ofs_ptr << " data" << i;
       if (i < 19)
@@ -360,7 +359,7 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
     }
   } else {
     // 只包含timestamp和结构化数据字段
-    *ofs_ptr << "timestamp, " << csv_header;
+    *ofs_ptr << "timestamp, onsensor_timestamp_us, " << csv_header;
   }
   *ofs_ptr << "\n";
 

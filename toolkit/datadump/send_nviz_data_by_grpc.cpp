@@ -1,5 +1,6 @@
 #include "send_nviz_data_by_grpc.h"
 #include "../util/logging.h"
+#include "data_structure_manager.h"
 #include <chrono>
 #include <errno.h>
 #include <iostream>
@@ -90,70 +91,69 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
       break; // 不够一个消息头的大小
     }
 
-    SimpleMessageHeader *msg_header = (SimpleMessageHeader *)curDataPtr;
-    curDataPtr += sizeof(SimpleMessageHeader);
-    curLen -= sizeof(SimpleMessageHeader);
+    SimpleMessageHeader msg_header;
+    uint8_t *payload_ptr = nullptr;
+    size_t payload_size = 0;
+    GetMsgPayload(curDataPtr, curLen, &msg_header, payload_ptr, payload_size);
 
-    uint32_t group_id = msg_header->magic; // magic 存储的是 group_id
-    uint32_t msg_id = msg_header->msg_id;
-    size_t len = msg_header->payload_length;
-    uint64_t onsensor_timestamp_us = msg_header->time_stamp; // 微秒时间戳
-
-    if (curLen < len) {
+    if (payload_size < static_cast<size_t>(msg_header.payload_length)) {
       break; // 数据不完整
     }
 
     bool success = false;
 
     // 根据 msg_id 选择不同的 gRPC 函数
-    // msg_id == 1: RawImuData (data[6])
-    // msg_id == 9999: BinaryData (通用二进制数据)
-    // msg_id == 401: ImageData (灰度图)
-    if (msg_id == 1) {
-      // IMU 数据: 解析为 RawImuData 格式
-      // Payload 格式: RawImuDataDumpStruct (44 bytes)
-      // [onsensor_timestamp_us (8)][timestamp_ns (8)][type (4)][data[6] (24)]
-
+    if (msg_header.msg_id == DUMP_MESSAGE_ID_RAW_IMU_DATA) {
       const size_t expected_size =
-          sizeof(uint64_t) * 2 + sizeof(uint32_t) + 6 * sizeof(float);
-      if (len >= expected_size) {
-        // 使用临时指针读取，避免影响后续的 curDataPtr += len
-        const uint8_t *dataPtr = curDataPtr;
-        uint64_t onsensor_timestamp_us_record =
-            *reinterpret_cast<const uint64_t *>(dataPtr);
-        dataPtr += sizeof(uint64_t);
-        uint64_t timestamp_ns = *reinterpret_cast<const uint64_t *>(dataPtr);
-        dataPtr += sizeof(uint64_t);
-        uint32_t type = *reinterpret_cast<const uint32_t *>(dataPtr);
-        const float *float_data =
-            reinterpret_cast<const float *>(dataPtr + sizeof(uint32_t));
-        success = sendRawImuData(group_id, msg_id, onsensor_timestamp_us,
-                                 timestamp_ns, type, float_data, 6);
+          structure_manager_.getStructure(msg_header.magic, msg_header.msg_id)
+              ->total_size;
+      if (msg_header.payload_length >= expected_size) {
+        RawImuDataDumpStruct *data =
+            reinterpret_cast<RawImuDataDumpStruct *>(payload_ptr);
+        // onsensor timestamp 使用消息头中的 time_stamp
+        success = sendRawImuData(msg_header.magic, msg_header.msg_id,
+                                 msg_header.time_stamp, data, expected_size);
       } else {
         DLOG_WARN(
             "{} Invalid RawImuData size for msg_id={}, expected={}, got={}",
-            log_prefix, msg_id, expected_size, len);
+            log_prefix, msg_header.msg_id, expected_size,
+            msg_header.payload_length);
       }
-    } else if (msg_id == 401) {
+    } else if (msg_header.msg_id == DUMP_MESSAGE_ID_LATENCY_DATA) {
+      const size_t expected_size =
+          structure_manager_.getStructure(msg_header.magic, msg_header.msg_id)
+              ->total_size;
+      if (msg_header.payload_length >= expected_size) {
+        RawLatencyDataDumpStruct *data =
+            reinterpret_cast<RawLatencyDataDumpStruct *>(curDataPtr);
+        // onsensor timestamp 使用消息头中的 time_stamp
+        success = sendLatencyData(msg_header.magic, msg_header.msg_id,
+                                  msg_header.time_stamp, data, expected_size);
+      } else {
+        DLOG_WARN(
+            "{} Invalid LatencyData size for msg_id={}, expected={}, got={}",
+            log_prefix, msg_header.msg_id, expected_size,
+            msg_header.payload_length);
+      }
+    } else if (msg_header.msg_id == DUMP_MESSAGE_ID_IMAGE_DATA) {
       // 灰度图数据: 使用 ImageData
-      std::string filename =
-          "image_" + std::to_string(onsensor_timestamp_us) + ".pgm";
-      success =
-          sendImageData(group_id, msg_id, onsensor_timestamp_us,
-                        get_current_timestamp_ns(), filename, curDataPtr, len);
+      success = sendImageData(msg_header.magic, msg_header.msg_id,
+                              msg_header.time_stamp, curDataPtr,
+                              msg_header.payload_length);
     } else {
-      // 默认使用 BinaryData (包括 msg_id == 9999)
-      success = sendBinaryData(group_id, msg_id, onsensor_timestamp_us,
-                               get_current_timestamp_ns(), curDataPtr, len);
+      // 默认使用 BinaryData (包括 DUMP_MESSAGE_ID_BINARY_DATA)
+      success = sendBinaryData(msg_header.magic, msg_header.msg_id,
+                               msg_header.time_stamp, curDataPtr,
+                               msg_header.payload_length);
     }
 
     if (!success) {
       DLOG_ERROR("{} Failed to send gRPC message, group_id={}, msg_id={}",
-                 log_prefix, group_id, msg_id);
+                 log_prefix, msg_header.magic, msg_header.msg_id);
     }
 
-    curDataPtr += len;
-    curLen -= len;
+    curDataPtr += msg_header.payload_length;
+    curLen -= msg_header.payload_length;
   }
 
   return true;
@@ -161,8 +161,8 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
 
 bool XrealLinkgRPC::sendRawImuData(uint32_t group_id, uint32_t msg_id,
                                    uint64_t onsensor_timestamp_us,
-                                   uint64_t timestamp_ns, uint32_t type,
-                                   const float *data, size_t data_count) {
+                                   RawImuDataDumpStruct *data,
+                                   uint32_t data_len) {
   if (!stub_ || !connected_) {
     return false;
   }
@@ -175,22 +175,16 @@ bool XrealLinkgRPC::sendRawImuData(uint32_t group_id, uint32_t msg_id,
     header->set_group_id(group_id);
     header->set_msg_id(msg_id);
     header->set_onsensor_timestamp_us(onsensor_timestamp_us);
-    header->set_timestamp_ns(timestamp_ns);
 
     // 设置数据
-    req.set_type(type);
-    if (data_count > 0)
-      req.set_data_1(data[0]);
-    if (data_count > 1)
-      req.set_data_2(data[1]);
-    if (data_count > 2)
-      req.set_data_3(data[2]);
-    if (data_count > 3)
-      req.set_data_4(data[3]);
-    if (data_count > 4)
-      req.set_data_5(data[4]);
-    if (data_count > 5)
-      req.set_data_6(data[5]);
+    req.set_timestamp_ns(data->timestamp_ns);
+    req.set_type(data->type);
+    req.set_data_1(data->data[0]);
+    req.set_data_2(data->data[1]);
+    req.set_data_3(data->data[2]);
+    req.set_data_4(data->data[3]);
+    req.set_data_5(data->data[4]);
+    req.set_data_6(data->data[5]);
 
     grpc::ClientContext ctx;
     Ack resp;
@@ -208,10 +202,52 @@ bool XrealLinkgRPC::sendRawImuData(uint32_t group_id, uint32_t msg_id,
   }
 }
 
+bool XrealLinkgRPC::sendLatencyData(uint32_t group_id, uint32_t msg_id,
+                                    uint64_t onsensor_timestamp_us,
+                                    RawLatencyDataDumpStruct *data,
+                                    uint32_t data_len) {
+  if (!stub_ || !connected_) {
+    return false;
+  }
+
+  try {
+    LatencyData req;
+
+    // 设置 NvizHeader
+    auto *header = req.mutable_header();
+    header->set_group_id(group_id);
+    header->set_msg_id(msg_id);
+    header->set_onsensor_timestamp_us(onsensor_timestamp_us);
+
+    // 设置数据
+    req.set_timestamp_ns(data->timestamp_ns);
+    req.set_type(data->type);
+    req.set_data_1(data->data[0]);
+    req.set_data_2(data->data[1]);
+    req.set_data_3(data->data[2]);
+    req.set_data_4(data->data[3]);
+    req.set_data_5(data->data[4]);
+    req.set_data_6(data->data[5]);
+
+    grpc::ClientContext ctx;
+    Ack resp;
+    auto status = stub_->SendLatencyData(&ctx, req, &resp);
+
+    if (!status.ok()) {
+      DLOG_ERROR("{} SendLatencyData failed: {}", log_prefix,
+                 status.error_message());
+      return false;
+    }
+    return true;
+  } catch (const std::exception &e) {
+    DLOG_ERROR("{} SendLatencyData exception: {}", log_prefix, e.what());
+    return false;
+  }
+}
+
 bool XrealLinkgRPC::sendBinaryData(uint32_t group_id, uint32_t msg_id,
                                    uint64_t onsensor_timestamp_us,
-                                   uint64_t timestamp_ns, const uint8_t *data,
-                                   uint32_t data_len) {
+                                   const uint8_t *data, uint32_t data_len) {
   if (!stub_ || !connected_) {
     return false;
   }
@@ -224,7 +260,6 @@ bool XrealLinkgRPC::sendBinaryData(uint32_t group_id, uint32_t msg_id,
     header->set_group_id(group_id);
     header->set_msg_id(msg_id);
     header->set_onsensor_timestamp_us(onsensor_timestamp_us);
-    header->set_timestamp_ns(timestamp_ns);
 
     // 设置数据
     req.set_data_len(data_len);
@@ -248,8 +283,6 @@ bool XrealLinkgRPC::sendBinaryData(uint32_t group_id, uint32_t msg_id,
 
 bool XrealLinkgRPC::sendImageData(uint32_t group_id, uint32_t msg_id,
                                   uint64_t onsensor_timestamp_us,
-                                  uint64_t timestamp_ns,
-                                  const std::string &filename,
                                   const uint8_t *data, uint32_t data_len) {
   if (!stub_ || !connected_) {
     return false;
@@ -263,10 +296,8 @@ bool XrealLinkgRPC::sendImageData(uint32_t group_id, uint32_t msg_id,
     header->set_group_id(group_id);
     header->set_msg_id(msg_id);
     header->set_onsensor_timestamp_us(onsensor_timestamp_us);
-    header->set_timestamp_ns(timestamp_ns);
 
     // 设置数据
-    req.set_filename(filename);
     req.set_image_binary_data(reinterpret_cast<const char *>(data), data_len);
 
     grpc::ClientContext ctx;

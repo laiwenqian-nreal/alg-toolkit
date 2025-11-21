@@ -61,8 +61,8 @@ union grouped_msg_id {
 // 简化的消息头结构
 struct SimpleMessageHeader {
   uint8_t magic;
-  int32_t msg_id;
-  int32_t payload_length;
+  uint32_t msg_id;
+  uint32_t payload_length;
   uint64_t time_stamp;
 };
 #pragma pack()
@@ -129,6 +129,15 @@ public:
       memcpy(_buffer.data() + sizeof(SimpleMessageHeader), _payload.data(),
              payload_size);
     }
+  }
+
+  static void GetMsgPayload(uint8_t *buffer, size_t buffer_size,
+                            SimpleMessageHeader *out_msg,
+                            uint8_t *&out_payload, size_t &out_payload_size) {
+    // Parse header from the buffer and return pointer/size for payload
+    *out_msg = *(SimpleMessageHeader *)buffer;
+    out_payload = buffer + sizeof(SimpleMessageHeader);
+    out_payload_size = buffer_size - sizeof(SimpleMessageHeader);
   }
 
   // 时间格式化工具函数

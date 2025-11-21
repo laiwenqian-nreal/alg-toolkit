@@ -23,6 +23,7 @@ using alg::v1::Ack;
 using alg::v1::AlgService;
 using alg::v1::BinaryData;
 using alg::v1::ImageData;
+using alg::v1::LatencyData;
 using alg::v1::RawImuData;
 
 // 创建目录（如果不存在）
@@ -45,7 +46,7 @@ bool createDirectory(const std::string &path) {
 class AlgServiceImpl final : public AlgService::Service {
 public:
   AlgServiceImpl(const std::string &save_dir)
-      : save_dir_(save_dir), structure_manager_(false) {
+      : save_dir_(save_dir), structure_manager_() {
 
     std::cout << "=== gRPC Receiver Server Started ===" << std::endl;
     std::cout << "Save Directory: " << save_dir_ << std::endl;
@@ -78,8 +79,7 @@ public:
 
     // 构造 RawImuDataDumpStruct 并保存
     RawImuDataDumpStruct imu_data;
-    imu_data.onsensor_timestamp_us = header.onsensor_timestamp_us();
-    imu_data.timestamp_ns = header.timestamp_ns();
+    imu_data.timestamp_ns = request->timestamp_ns();
     imu_data.type = request->type();
     imu_data.data[0] = request->data_1();
     imu_data.data[1] = request->data_2();
@@ -88,8 +88,8 @@ public:
     imu_data.data[4] = request->data_5();
     imu_data.data[5] = request->data_6();
 
-    std::cout << "  onsensor_timestamp_us: "
-              << imu_data.onsensor_timestamp_us << std::endl;
+    std::cout << "  onsensor_timestamp_us: " << header.onsensor_timestamp_us()
+              << std::endl;
     std::cout << "  timestamp_ns: " << imu_data.timestamp_ns << std::endl;
     std::cout << "  type: " << imu_data.type << std::endl;
     std::cout << "  data: [";
@@ -101,9 +101,49 @@ public:
     std::cout << "]" << std::endl;
 
     saveStructuredData(header.group_id(), header.msg_id(), &imu_data,
-                       sizeof(imu_data), header.timestamp_ns());
+                       sizeof(imu_data), request->timestamp_ns());
 
     response->set_note("RawImuData received");
+    return Status::OK;
+  }
+
+  // 接收 LatencyData
+  Status SendLatencyData(ServerContext *context, const LatencyData *request,
+                         Ack *response) override {
+    received_count_++;
+
+    const auto &header = request->header();
+    std::cout << "[" << received_count_ << "] LatencyData - "
+              << "Group:" << header.group_id() << " Msg:" << header.msg_id()
+              << " Type:" << request->type() << std::endl;
+
+    // 构造 RawLatencyDataDumpStruct 并保存
+    RawLatencyDataDumpStruct latency_data;
+    latency_data.timestamp_ns = request->timestamp_ns();
+    latency_data.type = request->type();
+    latency_data.data[0] = request->data_1();
+    latency_data.data[1] = request->data_2();
+    latency_data.data[2] = request->data_3();
+    latency_data.data[3] = request->data_4();
+    latency_data.data[4] = request->data_5();
+    latency_data.data[5] = request->data_6();
+
+    std::cout << "  onsensor_timestamp_us: " << header.onsensor_timestamp_us()
+              << std::endl;
+    std::cout << "  timestamp_ns: " << latency_data.timestamp_ns << std::endl;
+    std::cout << "  type: " << latency_data.type << std::endl;
+    std::cout << "  data: [";
+    for (int i = 0; i < 6; ++i) {
+      std::cout << latency_data.data[i];
+      if (i < 5)
+        std::cout << ", ";
+    }
+    std::cout << "]" << std::endl;
+
+    saveStructuredData(header.group_id(), header.msg_id(), &latency_data,
+                       sizeof(latency_data), request->timestamp_ns());
+
+    response->set_note("LatencyData received");
     return Status::OK;
   }
 
@@ -123,7 +163,7 @@ public:
 
     if (ofs && ofs->is_open()) {
       // 写入时间戳和数据长度
-      std::string line = std::to_string(header.timestamp_ns()) + "," +
+      std::string line = std::to_string(0ULL) + "," +
                          std::to_string(request->data_len()) + "," +
                          "binary_data\n";
 
@@ -143,17 +183,18 @@ public:
     std::cout << "[" << received_count_ << "] ImageData - "
               << "Group:" << header.group_id() << " Msg:" << header.msg_id()
               << " Size:" << request->image_binary_data().size() << " bytes"
-              << " File:" << request->filename() << std::endl;
+              << std::endl;
 
     // 保存图片数据到单独的文件
-    if (!request->filename().empty()) {
-      std::string img_path = save_dir_ + "/" + request->filename();
-      std::ofstream img_ofs(img_path, std::ios::binary);
-      if (img_ofs.is_open()) {
-        img_ofs.write(request->image_binary_data().data(),
-                      request->image_binary_data().size());
-        img_ofs.close();
-      }
+    std::string img_filename = "image_" + std::to_string(header.group_id()) + "_" + 
+                               std::to_string(header.msg_id()) + ".bin";
+    std::string img_path = save_dir_ + "/" + img_filename;
+    std::ofstream img_ofs(img_path, std::ios::binary);
+    if (img_ofs.is_open()) {
+      img_ofs.write(request->image_binary_data().data(),
+                    request->image_binary_data().size());
+      img_ofs.close();
+      std::cout << "  Saved image to: " << img_path << std::endl;
     }
 
     // 同时记录到 CSV
@@ -162,7 +203,7 @@ public:
 
     if (ofs && ofs->is_open()) {
       std::string line =
-          std::to_string(header.timestamp_ns()) + "," + request->filename() +
+          std::to_string(0ULL) + "," + img_filename +
           "," + std::to_string(request->image_binary_data().size()) + "\n";
 
       addToBuffer(filename, line);
@@ -197,8 +238,8 @@ private:
       std::cout << "  Saved to: " << filename << std::endl;
     } else {
       std::cerr << "  Warning: parseDataToCsv returned empty for group_id="
-                << group_id << ", msg_id=" << msg_id << ", data_size="
-                << data_size << std::endl;
+                << group_id << ", msg_id=" << msg_id
+                << ", data_size=" << data_size << std::endl;
     }
   }
 
@@ -327,17 +368,17 @@ int main(int argc, char **argv) {
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
     if (arg == "-h" || arg == "--help") {
-      std::cout
-          << "Usage: " << argv[0] << " [OPTIONS]\n"
-          << "Options:\n"
-          << "  -a, --address <addr>  Server address (default: 169.254.2.1:50051)\n"
-          << "  -d, --dir <path>      Save directory (default: "
-             "./grpc_received_data)\n"
-          << "  -h, --help            Show this help message\n"
-          << "\nData will be saved in CSV format similar to "
-             "dump_nviz_data_to_file\n"
-          << "Files will be named: group_<id>_msg_<id>.csv\n"
-          << std::endl;
+      std::cout << "Usage: " << argv[0] << " [OPTIONS]\n"
+                << "Options:\n"
+                << "  -a, --address <addr>  Server address (default: "
+                   "169.254.2.1:50051)\n"
+                << "  -d, --dir <path>      Save directory (default: "
+                   "./grpc_received_data)\n"
+                << "  -h, --help            Show this help message\n"
+                << "\nData will be saved in CSV format similar to "
+                   "dump_nviz_data_to_file\n"
+                << "Files will be named: group_<id>_msg_<id>.csv\n"
+                << std::endl;
       return 0;
     } else if ((arg == "-a" || arg == "--address") && i + 1 < argc) {
       server_address = argv[++i];

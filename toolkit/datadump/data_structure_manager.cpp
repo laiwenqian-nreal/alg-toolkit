@@ -60,47 +60,83 @@ void DataStructure::calculateSize() {
 }
 
 // DataStructureManager implementation
-DataStructureManager::DataStructureManager(bool ignore_onsensor_timestamp) {
+DataStructureManager::DataStructureManager() {
   std::shared_ptr<DataStructure> raw_imu_data_struct =
       std::make_shared<DataStructure>();
   raw_imu_data_struct->name = "RawImuDataDumpStruct";
   raw_imu_data_struct->fields = {
-      {"u64", "onsensor_timestamp_us", "us", 1, ignore_onsensor_timestamp},
-      {"u64", "timestamp_ns", "ns", 1, false},
-      {"u32", "type", "", 1, false},
-      {"f32", "data0", "", 1, false},
-      {"f32", "data1", "", 1, false},
-      {"f32", "data2", "", 1, false},
-      {"f32", "data3", "", 1, false},
-      {"f32", "data4", "", 1, false},
-      {"f32", "data5", "", 1, false}};
+      {"u64", "timestamp_ns", "ns", 1, false}, {"u32", "type", "", 1, false},
+      {"f32", "data0", "", 1, false},          {"f32", "data1", "", 1, false},
+      {"f32", "data2", "", 1, false},          {"f32", "data3", "", 1, false},
+      {"f32", "data4", "", 1, false},          {"f32", "data5", "", 1, false}};
   raw_imu_data_struct->calculateSize();
   structures_["RawImuDataDumpStruct"] = raw_imu_data_struct;
+
+  std::shared_ptr<DataStructure> raw_latency_data_struct =
+      std::make_shared<DataStructure>();
+  raw_latency_data_struct->name = "RawLatencyDataDumpStruct";
+  raw_latency_data_struct->fields = {{"u64", "timestamp_ns", "ns", 1, false},
+                                     {"u32", "type", "", 1, false},
+                                     {"u64", "data0", "ns", 1, false},
+                                     {"u64", "data1", "ns", 1, false},
+                                     {"u64", "data2", "ns", 1, false},
+                                     {"u64", "data3", "ns", 1, false},
+                                     {"u64", "data4", "ns", 1, false},
+                                     {"u64", "data5", "ns", 1, false}};
+  raw_latency_data_struct->calculateSize();
+  structures_["RawLatencyDataDumpStruct"] = raw_latency_data_struct;
+
+  // 初始化 msg_id 到数据结构的映射
+  msg_id_to_field_definitions_[DUMP_MESSAGE_ID_RAW_IMU_DATA] =
+      "RawImuDataDumpStruct";
+  msg_id_to_field_definitions_[DUMP_MESSAGE_ID_LATENCY_DATA] =
+      "RawLatencyDataDumpStruct";
 }
 
 DataStructureManager::DataStructureManager(
     const std::string &data_struct,
-    const std::map<uint64_t, std::string> &group_msg_id_to_field_definitions,
-    bool ignore_onsensor_timestamp) {
+    const std::map<uint32_t, std::string> &msg_id_to_field_definitions) {
 
   std::shared_ptr<DataStructure> raw_imu_data_struct =
       std::make_shared<DataStructure>();
   raw_imu_data_struct->name = "RawImuDataDumpStruct";
-  raw_imu_data_struct->fields = {
-      {"u64", " onsensor_timestamp_us", "us", 1, ignore_onsensor_timestamp},
-      {"u64", " timestamp_ns", "ns", 1, false},
-      {"u32", " type", "", 1, false},
-      {"f32", " data0", "", 1, false},
-      {"f32", " data1", "", 1, false},
-      {"f32", " data2", "", 1, false},
-      {"f32", " data3", "", 1, false},
-      {"f32", " data4", "", 1, false},
-      {"f32", " data5", "", 1, false}};
+  raw_imu_data_struct->fields = {{"u64", " timestamp_ns", "ns", 1, false},
+                                 {"u32", " type", "", 1, false},
+                                 {"f32", " data0", "", 1, false},
+                                 {"f32", " data1", "", 1, false},
+                                 {"f32", " data2", "", 1, false},
+                                 {"f32", " data3", "", 1, false},
+                                 {"f32", " data4", "", 1, false},
+                                 {"f32", " data5", "", 1, false}};
   raw_imu_data_struct->calculateSize();
   structures_["RawImuDataDumpStruct"] = raw_imu_data_struct;
+
+  std::shared_ptr<DataStructure> raw_latency_data_struct =
+      std::make_shared<DataStructure>();
+  raw_latency_data_struct->name = "RawLatencyDataDumpStruct";
+  raw_latency_data_struct->fields = {{"u64", " timestamp_ns", "ns", 1, false},
+                                     {"u32", " type", "", 1, false},
+                                     {"u64", " data0", "ns", 1, false},
+                                     {"u64", " data1", "ns", 1, false},
+                                     {"u64", " data2", "ns", 1, false},
+                                     {"u64", " data3", "ns", 1, false},
+                                     {"u64", " data4", "ns", 1, false},
+                                     {"u64", " data5", "ns", 1, false}};
+  raw_latency_data_struct->calculateSize();
+  structures_["RawLatencyDataDumpStruct"] = raw_latency_data_struct;
+
+  // 初始化默认的 msg_id 到数据结构的映射
+  msg_id_to_field_definitions_[DUMP_MESSAGE_ID_RAW_IMU_DATA] =
+      "RawImuDataDumpStruct";
+  msg_id_to_field_definitions_[DUMP_MESSAGE_ID_LATENCY_DATA] =
+      "RawLatencyDataDumpStruct";
+
   // 解析数据结构定义
   loadFromJsonString(data_struct);
-  group_id_to_field_definitions_ = group_msg_id_to_field_definitions;
+  // 合并传入的映射，传入的映射会覆盖默认映射
+  for (const auto &pair : msg_id_to_field_definitions) {
+    msg_id_to_field_definitions_[pair.first] = pair.second;
+  }
 }
 
 std::string DataStructureManager::parseJsonString(const std::string &json,
@@ -233,15 +269,6 @@ bool DataStructureManager::loadFromJsonString(const std::string &json_config) {
           field.type = words[0];
           field.name = words[1];
 
-          // 检查是否需要忽略该字段（IGNORE_ 或 HIDE 前缀）
-          if (field.name.find("IGNORE_") == 0 || field.name.find("HIDE") != std::string::npos) {
-            field.ignore = true;
-            // 移除 IGNORE_ 前缀以保留实际字段名
-            if (field.name.find("IGNORE_") == 0) {
-              field.name = field.name.substr(7); // 去掉 "IGNORE_"
-            }
-          }
-
           // 处理数组类型 name[size]
           if (field.name.find("[") != std::string::npos) {
             size_t bracket_start = field.name.find("[");
@@ -286,14 +313,15 @@ bool DataStructureManager::loadFromJsonFile(const std::string &filename) {
 
 std::shared_ptr<DataStructure>
 DataStructureManager::getStructure(uint32_t group_id, uint32_t msg_id) {
-  uint64_t key = (static_cast<uint64_t>(group_id) << 32) | msg_id;
-  auto filed_it = group_id_to_field_definitions_.find(key);
-  if (filed_it != group_id_to_field_definitions_.end()) {
-    auto struct_it = structures_.find(filed_it->second);
+  // 首先查找 msg_id_to_field_definitions_ 中的映射
+  auto msg_it = msg_id_to_field_definitions_.find(msg_id);
+  if (msg_it != msg_id_to_field_definitions_.end()) {
+    auto struct_it = structures_.find(msg_it->second);
     if (struct_it != structures_.end()) {
       return struct_it->second;
     }
   }
+
   return nullptr;
 }
 
@@ -358,25 +386,23 @@ std::string DataStructureManager::generateCsvHeader(uint32_t group_id,
 
   std::string header;
   bool first_field = true;
-  
+
   for (size_t i = 0; i < structure->fields.size(); ++i) {
     const auto &field = structure->fields[i];
 
     // 跳过标记为 ignore 的字段
-    if (!field.ignore) {
-      if (!first_field) {
-        header += ", ";
-      }
-      first_field = false;
+    if (!first_field) {
+      header += ", ";
+    }
+    first_field = false;
 
-      if (field.array_size == 1) {
-        header += field.name;
-      } else {
-        for (int j = 0; j < field.array_size; ++j) {
-          header += field.name + "[" + std::to_string(j) + "]";
-          if (j < field.array_size - 1) {
-            header += ", ";
-          }
+    if (field.array_size == 1) {
+      header += field.name;
+    } else {
+      for (int j = 0; j < field.array_size; ++j) {
+        header += field.name + "[" + std::to_string(j) + "]";
+        if (j < field.array_size - 1) {
+          header += ", ";
         }
       }
     }
