@@ -53,6 +53,11 @@
         "concepts": "cpp",
         "ranges": "cpp",
         "fstream": "cpp",
-        "cerrno": "cpp"
+        "cerrno": "cpp",
+        "condition_variable": "cpp",
+        "numeric": "cpp",
+        "thread": "cpp",
+        "stop_token": "cpp",
+        "span": "cpp"
     }
 }

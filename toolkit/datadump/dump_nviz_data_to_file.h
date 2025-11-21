@@ -46,14 +46,17 @@ protected:
   std::string save_dir_ = "";
 
   // 批量写入配置
-  static const size_t BUFFER_SIZE_LIMIT = 8192; // 8KB缓冲区
-  static const size_t BUFFER_COUNT_LIMIT = 100; // 100条记录
+  static const size_t BUFFER_SIZE_LIMIT = 1024; // 8KB缓冲区
+  static const size_t BUFFER_COUNT_LIMIT = 10; // 100条记录
   std::map<std::string, size_t> filename_to_count_; // 使用文件名的记录计数
   std::map<std::string, std::chrono::steady_clock::time_point>
       filename_to_last_flush_; // 使用文件名的上次刷新时间
   static constexpr std::chrono::milliseconds FLUSH_INTERVAL{50}; // 50ms强制刷新
 
-  XrealLinkOnlySaveFile(std::string save_dir);
+  // 实例级别的数据结构管理器
+  DataStructureManager structure_manager_;
+
+  XrealLinkOnlySaveFile(std::string save_dir, bool add_header);
 
 public:
   ~XrealLinkOnlySaveFile();
@@ -98,6 +101,8 @@ private:
 
 public:
   static XrealLinkOnlySaveFile *getInstance(const std::string &save_dir = "./");
+
+  static void setAddHeader(bool add_header);
 
   void setMapMsgIdToFilename(const uint64_t group_id, const uint64_t msg_id,
                              const std::string &filename);

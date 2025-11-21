@@ -1,0 +1,55 @@
+syntax = "proto3";
+package alg.v1;
+
+message NvizHeader {
+  uint64 group_id = 1;
+  uint32 msg_id = 2;
+  uint64 onsensor_timestamp_us = 3; 
+}
+
+message RawImuData {
+  NvizHeader header = 1;
+  uint64 timestamp_ns = 2;
+  uint32 type = 3;
+  float data_1 = 4;
+  float data_2 = 5;
+  float data_3 = 6;
+  float data_4 = 7;
+  float data_5 = 8;
+  float data_6 = 9;
+}
+
+message LatencyData {
+  NvizHeader header = 1;
+  uint64 timestamp_ns = 2;
+  uint32 type = 3;
+  uint64 data_1 = 4;
+  uint64 data_2 = 5;
+  uint64 data_3 = 6;
+  uint64 data_4 = 7;
+  uint64 data_5 = 8;
+  uint64 data_6 = 9;
+}
+
+message BinaryData {
+  NvizHeader header = 1;
+  uint32 data_len = 2;
+  bytes payload = 3;
+}
+// TODO 最好和谭桥代码统一
+message ImageData {
+  NvizHeader header = 1;
+  bytes image_binary_data = 2;
+}
+
+message Ack {
+  string note = 1;
+}
+
+service AlgService {
+  // 一次性发送
+  rpc SendRawImuData(RawImuData) returns (Ack);
+  rpc SendLatencyData(LatencyData) returns (Ack);
+  rpc SendBinaryData(BinaryData) returns (Ack);
+  rpc SendImageData(ImageData) returns (Ack);  // 修正拼写: Date -> Data
+}

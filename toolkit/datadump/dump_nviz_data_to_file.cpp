@@ -33,8 +33,15 @@ namespace xreal {
 namespace toolkits {
 namespace datadump {
 
-XrealLinkOnlySaveFile::XrealLinkOnlySaveFile(std::string save_dir) {
+// 全局配置：是否忽略 onsensor_timestamp_us 字段
+static bool g_add_header = false;
+
+XrealLinkOnlySaveFile::XrealLinkOnlySaveFile(std::string save_dir,
+                                             bool add_header)
+    : structure_manager_() {
   log_prefix = "[xreal_link_file]";
+  // set global flag from constructor parameter
+  g_add_header = add_header;
   save_dir_ = save_dir + (save_dir.back() == '/' ? "" : "/");
 
   // Create or clear the directory
@@ -134,24 +141,22 @@ bool XrealLinkOnlySaveFile::saveMsg(DataBuffer msg) {
       break; // 不够一个消息头的大小
     }
 
-    SimpleMessageHeader *msg_header = (SimpleMessageHeader *)curDataPtr;
-    curDataPtr += sizeof(SimpleMessageHeader);
-    curLen -= sizeof(SimpleMessageHeader);
-
-    int64_t group_id = msg_header->magic;
-    int64_t msg_id = msg_header->msg_id;
-    size_t len = msg_header->payload_length;
+    SimpleMessageHeader msg_header;
+    uint8_t *payload_ptr = nullptr;
+    size_t payload_size = 0;
+    GetMsgPayload(curDataPtr, curLen, &msg_header, payload_ptr, payload_size);
     uint64_t timestamp = get_current_timestamp_us(); // 入队列时间戳(微秒)
 
-    if (curLen < len) {
+    if (payload_size < static_cast<size_t>(msg_header.payload_length)) {
       break; // 数据不完整
     }
 
-    // 使用数据结构管理器解析数据
-    saveStructuredData(group_id, msg_id, curDataPtr, len, timestamp);
+    // 使用数据结构管理器解析数据 (payload_ptr now points to payload)
+    saveStructuredData(msg_header.magic, msg_header.msg_id, payload_ptr,
+                       msg_header.payload_length, timestamp);
 
-    curDataPtr += len;
-    curLen -= len;
+    curDataPtr += sizeof(SimpleMessageHeader) + msg_header.payload_length;
+    curLen -= sizeof(SimpleMessageHeader) + msg_header.payload_length;
   }
 
   return true;
@@ -235,21 +240,23 @@ void XrealLinkOnlySaveFile::flushBuffer(const std::string &filename) {
   for (auto &buffer_pair : filename_to_buffer_) {
     const std::string &file_name = buffer_pair.first;
     std::string &buffer = buffer_pair.second;
-    
+
     if (!buffer.empty()) {
       // 查找对应的文件流
       auto ofs_it = filename_to_ofs_.find(file_name);
-      if (ofs_it != filename_to_ofs_.end() && ofs_it->second && ofs_it->second->is_open()) {
+      if (ofs_it != filename_to_ofs_.end() && ofs_it->second &&
+          ofs_it->second->is_open()) {
         // 批量写入
         *ofs_it->second << buffer;
         ofs_it->second->flush(); // 强制刷新到磁盘
-        
+
         // 清空缓冲区
         buffer.clear();
         filename_to_count_[file_name] = 0;
         filename_to_last_flush_[file_name] = std::chrono::steady_clock::now();
       } else {
-        DLOG_INFO("No open file stream found for flushing: {} {}", file_name, __LINE__);
+        DLOG_INFO("No open file stream found for flushing: {} {}", file_name,
+                  __LINE__);
       }
     }
   }
@@ -257,8 +264,12 @@ void XrealLinkOnlySaveFile::flushBuffer(const std::string &filename) {
 
 XrealLinkOnlySaveFile *
 XrealLinkOnlySaveFile::getInstance(const std::string &save_dir) {
-  static XrealLinkOnlySaveFile instance(save_dir);
+  static XrealLinkOnlySaveFile instance(save_dir, g_add_header);
   return &instance;
+}
+
+void XrealLinkOnlySaveFile::setAddHeader(bool add_header) {
+  g_add_header = add_header;
 }
 
 void XrealLinkOnlySaveFile::setMapMsgIdToFilename(const uint64_t group_id,
@@ -305,8 +316,8 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
       return it->second;
     } else {
       // 文件存在但未打开，重新打开
-      std::string filename = save_dir_+ "/" + filename_prefix_ +
-                             "_" + file_name + ".csv";
+      std::string filename =
+          save_dir_ + "/" + filename_prefix_ + "_" + file_name + ".csv";
       it->second->open(filename, std::ofstream::out | std::ofstream::app);
       if (it->second->is_open()) {
         return it->second;
@@ -315,8 +326,6 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
   }
 
   if (save_dir_.empty()) {
-    // get absolute wall time
-    auto now = std::chrono::system_clock::now();
     // 创建日期目录
     if (access(save_dir_.c_str(), 0) != 0) {
       if (MKDIR(save_dir_.c_str()) != 0) {
@@ -326,9 +335,11 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
     }
   }
 
-  std::string filename = save_dir_+ "/" + filename_prefix_ +
-                         "_local_" + file_name + ".csv";
-
+  std::string filename = save_dir_ + "/" + file_name + ".csv";
+  if (g_add_header) {
+    filename =
+        save_dir_ + "/" + filename_prefix_ + "_local_" + file_name + ".csv";
+  }
   std::shared_ptr<std::ofstream> ofs_ptr;
   ofs_ptr.reset(
       new std::ofstream(filename, std::ofstream::out | std::ofstream::app));
@@ -340,7 +351,7 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
       structure_manager_.generateCsvHeader(group_id, msg_id);
   if (csv_header.empty()) {
     // 使用默认头：只有timestamp和数据
-    *ofs_ptr << "timestamp, ";
+    *ofs_ptr << "timestamp, onsensor_timestamp_us, ";
     for (int i = 0; i < 20; ++i) {
       *ofs_ptr << " data" << i;
       if (i < 19)
@@ -348,7 +359,7 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
     }
   } else {
     // 只包含timestamp和结构化数据字段
-    *ofs_ptr << "timestamp, " << csv_header;
+    *ofs_ptr << "timestamp, onsensor_timestamp_us, " << csv_header;
   }
   *ofs_ptr << "\n";
 
@@ -358,16 +369,17 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
   return ofs_ptr;
 }
 
-void XrealLinkOnlySaveFile::linkSendStatus(int group_id, int msg_id, 
+void XrealLinkOnlySaveFile::linkSendStatus(int group_id, int msg_id,
                                            const uint8_t *data, uint64_t len) {
   DataBuffer raw_msg;
   raw_msg.resize(sizeof(XrealLinkCommon::RawMessageHeader) + len);
-  XrealLinkCommon::RawMessageHeader *raw_header = 
+  XrealLinkCommon::RawMessageHeader *raw_header =
       (XrealLinkCommon::RawMessageHeader *)raw_msg.data();
   raw_header->group_id = group_id;
   raw_header->msg_id = msg_id;
   if (data && len > 0) {
-    memcpy(raw_msg.data() + sizeof(XrealLinkCommon::RawMessageHeader), data, len);
+    memcpy(raw_msg.data() + sizeof(XrealLinkCommon::RawMessageHeader), data,
+           len);
   }
   XrealLinkOnlySaveFile::getInstance()->messageEnQueue(raw_msg);
 }

@@ -49,6 +49,7 @@ target_link_libraries( ${TARGET_NAME}
 
 add_subdirectory(util)
 add_subdirectory(datadump)
+add_subdirectory(interface)
 
 ######################################################################################
 ##  							INSTALL  											##
