@@ -186,7 +186,11 @@ void XrealLinkOnlySaveFile::saveStructuredData(uint64_t group_id,
     csv_line = parseAsDefault(data, data_size, timestamp);
   } else {
     // 只在CSV行前添加timestamp
-    csv_line = std::to_string(timestamp) + "," + csv_line;
+    if (g_add_header)
+      csv_line = std::to_string(timestamp) + "," +
+                 std::to_string(timestamp / 1e9) + "," + csv_line;
+    else
+      csv_line = csv_line;
   }
 
   csv_line += "\n";
@@ -351,15 +355,17 @@ XrealLinkOnlySaveFile::getOfsByXreallinkIds(const uint64_t group_id,
       structure_manager_.generateCsvHeader(group_id, msg_id);
   if (csv_header.empty()) {
     // 使用默认头：只有timestamp和数据
-    *ofs_ptr << "timestamp, onsensor_timestamp_us, ";
+    if (g_add_header)
+      *ofs_ptr << "timestamp, onsensor_timestamp_us, ";
     for (int i = 0; i < 20; ++i) {
       *ofs_ptr << " data" << i;
       if (i < 19)
         *ofs_ptr << ",";
     }
   } else {
-    // 只包含timestamp和结构化数据字段
-    *ofs_ptr << "timestamp, onsensor_timestamp_us, " << csv_header;
+    if (g_add_header)
+      // 只包含timestamp和结构化数据字段
+      *ofs_ptr << "timestamp, onsensor_timestamp_us, " << csv_header;
   }
   *ofs_ptr << "\n";
 
