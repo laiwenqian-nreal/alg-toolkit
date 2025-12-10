@@ -1,0 +1,290 @@
+fmt:
+  "10.2.1":
+    url: "https://github.com/fmtlib/fmt/releases/download/10.2.1/fmt-10.2.1.zip"
+    sha256: "312151a2d13c8327f5c9c586ac6cf7cddc1658e8f53edae0ec56509c8fa516c9"
+  "10.0.0":
+    url: "https://github.com/fmtlib/fmt/releases/download/10.0.0/fmt-10.0.0.zip"
+    sha256: "4943cb165f3f587f26da834d3056ee8733c397e024145ca7d2a8a96bb71ac281"
+  "9.1.0":
+    url: "https://github.com/fmtlib/fmt/releases/download/9.1.0/fmt-9.1.0.zip"
+    sha256: "cceb4cb9366e18a5742128cb3524ce5f50e88b476f1e54737a47ffdf4df4c996"
+spdlog:
+  "1.14.1":
+    url: "https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.zip"
+    sha256: "429dfdf3afc1984feb59e414353c21c110bc79609f6d7899d52f6aa388646f6d"
+  "1.13.0":
+    url: "https://github.com/gabime/spdlog/archive/refs/tags/v1.13.0.zip"
+    sha256: "9f6763bb76fff7db371f5733626c83352edd7c57899501ab00248fafad9cc504"
+  "1.12.0":
+    url: "https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.zip"
+    sha256: "6174bf8885287422a6c6a0312eb8a30e8d22bcfcee7c48a6d02d1835d7769232"
+  "1.11.0":
+    url: "https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.zip"
+    sha256: "33f83c6b86ec0fbbd0eb0f4e980da6767494dc0ad063900bcfae8bc3e9c75f21"
+  # Each release is intended to work with some specific versions
+  fmt_version_mapping:
+    "1.15.1": "11.1.3"
+    "1.15.0": "11.0.2"
+    "1.14.1": "9.1.0"
+    "1.14.0": "9.1.0"
+    "1.13.0": "9.1.0"
+    "1.12.0": "9.1.0"
+    "1.11.0": "9.1.0"
+    "1.10.0": "8.1.1"
+    "1.9.2": "8.0.1"
+    "1.9.1": "8.0.1"
+    "1.8.5": "7.1.3"  
+doctest:
+  "2.4.11":
+    url: "https://github.com/doctest/doctest/archive/refs/tags/v2.4.11.zip"
+    sha256: "6745e17682d6e2be1ea31ec8bf1814a3d7cb17d61d120e5f2ee5a075926634ad"
+zlib:
+  "1.2.13":
+    url: "https://github.com/madler/zlib/releases/download/v1.2.13/zlib1213.zip"
+    sha256: "d233fca7cf68db4c16dc5287af61f3cd01ab62495224c66639ca3da537701e42"
+jsoncpp:
+  "1.9.5":
+    url: "https://github.com/open-source-parsers/jsoncpp/archive/refs/tags/1.9.5.zip"
+    sha256: "a074e1b38083484e8e07789fd683599d19da8bb960959c83751cd0284bdf2043"
+protobuf:
+  "3.2.0":
+    url: "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.2.0.zip"
+    sha256: "5bb18de928e3c6f11da077452f934414f2912df01a3adf7d2d82aba9e47d34bf"
+  "3.21.9":
+    url: "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.21.9.zip"
+    sha256: "f66073dee0bc159157b0bd7f502d7d1ee0bc76b3c1eac9836927511bdc4b3fc1"
+  "5.29.3":
+    url: "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v5.29.3.tar.gz"
+    sha256: "fe35f190d7a63533b06558915d6ee469cbee143de70891e1dd54d197b05f362a"
+  "5.28.3":
+    url: "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v5.28.3.tar.gz"
+    sha256: "7fce939b9b7181bd0bd157360e0cc88a8cabf01ac4efe4662494f56dd955d4c1"
+  "5.27.0":
+    url: "https://github.com/protocolbuffers/protobuf/archive/refs/tags/v5.27.0.tar.gz"
+    sha256: "1611a03e550c27c526bde1da544c94f7aa65c10687bbc8e570537dfa94069e1a"
+protobuf_absl_deps:
+  "5.29.3":
+    - absl_absl_check
+    - absl_absl_log
+    - absl_algorithm
+    - absl_base
+    - absl_bind_front
+    - absl_bits
+    - absl_btree
+    - absl_cleanup
+    - absl_cord
+    - absl_core_headers
+    - absl_debugging
+    - absl_die_if_null
+    - absl_dynamic_annotations
+    - absl_flags
+    - absl_flat_hash_map
+    - absl_flat_hash_set
+    - absl_function_ref
+    - absl_hash
+    - absl_if_constexpr
+    - absl_layout
+    - absl_log_initialize
+    - absl_log_globals
+    - absl_log_severity
+    - absl_memory
+    - absl_node_hash_map
+    - absl_node_hash_set
+    - absl_optional
+    - absl_random_distributions
+    - absl_random_random
+    - absl_span
+    - absl_status
+    - absl_statusor
+    - absl_strings
+    - absl_synchronization
+    - absl_time
+    - absl_type_traits
+    - absl_utility
+    - absl_variant
+  "5.28.3":
+    - absl_absl_check
+    - absl_absl_log
+    - absl_algorithm
+    - absl_base
+    - absl_bind_front
+    - absl_bits
+    - absl_btree
+    - absl_cleanup
+    - absl_cord
+    - absl_core_headers
+    - absl_debugging
+    - absl_die_if_null
+    - absl_dynamic_annotations
+    - absl_flags
+    - absl_flat_hash_map
+    - absl_flat_hash_set
+    - absl_function_ref
+    - absl_hash
+    - absl_if_constexpr
+    - absl_layout
+    - absl_log_initialize
+    - absl_log_globals
+    - absl_log_severity
+    - absl_memory
+    - absl_node_hash_map
+    - absl_node_hash_set
+    - absl_optional
+    - absl_random_distributions
+    - absl_random_random
+    - absl_span
+    - absl_status
+    - absl_statusor
+    - absl_strings
+    - absl_synchronization
+    - absl_time
+    - absl_type_traits
+    - absl_utility
+    - absl_variant
+  "5.27.0":
+    - absl_absl_check
+    - absl_absl_log
+    - absl_algorithm
+    - absl_base
+    - absl_bind_front
+    - absl_bits
+    - absl_btree
+    - absl_cleanup
+    - absl_cord
+    - absl_core_headers
+    - absl_debugging
+    - absl_die_if_null
+    - absl_dynamic_annotations
+    - absl_flags
+    - absl_flat_hash_map
+    - absl_flat_hash_set
+    - absl_function_ref
+    - absl_hash
+    - absl_if_constexpr
+    - absl_layout
+    - absl_log_initialize
+    - absl_log_globals
+    - absl_log_severity
+    - absl_memory
+    - absl_node_hash_map
+    - absl_node_hash_set
+    - absl_optional
+    - absl_random_distributions
+    - absl_random_random
+    - absl_span
+    - absl_status
+    - absl_statusor
+    - absl_strings
+    - absl_synchronization
+    - absl_time
+    - absl_type_traits
+    - absl_utility
+    - absl_variant
+eigen:
+  "3.3.7":
+    url: "https://github.com/eigenteam/eigen-git-mirror/archive/refs/tags/3.3.7.zip"
+    sha256: "92e819d037cced0b1d0596203d7e26263b3df9fb8fcb7b260d7c9fd61b277a2c"
+  "3.3.9":
+    url: "https://gitlab.com/libeigen/eigen/-/archive/3.3.9/eigen-3.3.9.zip"
+    sha256: "83709a8def0d60dc4d17a749989893ea5e5aacf13f9184ae0509313f400f6f45"
+jniwrap:
+  "master":
+    url: "git@github.com:nreal-ai/android-jni-wrap.git"
+gcc:
+  "7.5.0":
+    sha256: "4f518f18cfb694ad7975064e99e200fe98af13603b47e67e801ba9580e50a07f"
+    url: "https://ftp.gnu.org/gnu/gcc/gcc-7.5.0/gcc-7.5.0.tar.gz"
+stb:
+  "cci.20230920":
+    url: "https://github.com/nothings/stb/archive/5736b15f7ea0ffb08dd38af21067c314d6a3aae9.zip"
+    sha256: "b6601f182fa4bc04dd0f135e38231e8a2c6c9e7901c66a942871f03285713b05"
+fast-cpp-csv-parser:
+  "cci.20240102":
+    url: "https://github.com/ben-strasser/fast-cpp-csv-parser/archive/a71a87e700b0fb92645c6b124742cbf326e0f7b1.tar.gz"
+    sha256: "635d34234b9ebfefde42af3431547a5da29a112dd43cdbb532f79844b3b761d8"
+ffmpeg:
+  "6.1.1":
+    url: "http://ffmpeg.org/releases/ffmpeg-6.1.1.tar.bz2"
+    sha256: "5e3133939a61ef64ac9b47ffd29a5ea6e337a4023ef0ad972094b4da844e3a20"
+sdl:
+  "2.30.5":
+    url: "https://www.libsdl.org/release/SDL2-2.30.5.tar.gz"
+    sha256: "f374f3fa29c37dfcc20822d4a7d7dc57e58924d1a5f2ad511bfab4c8193de63b"
+libiconv:
+  "1.17":
+    url: "https://ftp.gnu.org/gnu/libiconv/libiconv-1.17.tar.gz"
+    sha256: "8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313"
+mp3lame:
+  "3.100":
+    url: "https://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz"
+    sha256: "ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e"
+spirv-headers:
+  "1.3.296.0":
+    url: "https://github.com/KhronosGroup/SPIRV-Headers/archive/refs/tags/vulkan-sdk-1.3.296.0.tar.gz"
+    sha256: "1423d58a1171611d5aba2bf6f8c69c72ef9c38a0aca12c3493e4fda64c9b2dc6"
+  "1.3.268.0":
+    url: "https://github.com/KhronosGroup/SPIRV-Headers/archive/refs/tags/vulkan-sdk-1.3.268.0.tar.gz"
+    sha256: "1022379e5b920ae21ccfb5cb41e07b1c59352a18c3d3fdcbf38d6ae7733384d4"
+spirv-tools:
+  "1.3.296.0":
+    url: "https://github.com/KhronosGroup/SPIRV-Tools/archive/refs/tags/vulkan-sdk-1.3.296.0.tar.gz"
+    sha256: "75aafdf7e731b4b6bfb36a590ddfbb38ebc605d80487f38254da24fe0cb95837"
+  "1.3.268.0":
+    url: "https://github.com/KhronosGroup/SPIRV-Tools/archive/refs/tags/vulkan-sdk-1.3.268.0.tar.gz"
+    sha256: "4c19fdcffb5fe8ef8dc93d7a65ae78b64edc7a5688893ee381c57f70be77deaf"
+glslang:
+  "1.3.296.0":
+    url: "https://github.com/KhronosGroup/glslang/archive/refs/tags/vulkan-sdk-1.3.296.0.tar.gz"
+    sha256: "a7a5e845ee46b02a762c137e35245079774b8b830034883d6b73ba0023e24f56"
+  "1.3.268.0":
+    url: "https://github.com/KhronosGroup/glslang/archive/refs/tags/vulkan-sdk-1.3.268.0.tar.gz"
+    sha256: "8cfb4824f185bc246cd41cceedbfcdf14abd3d2fa861512baf81df8a263b9283"
+vulkan-headers:
+  "1.4.304.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.304.0.tar.gz"
+    sha256: "46f8f5b6384a36c688e0c40d28d534df41d22de406493dfb5c9b7bcc29672613"
+  "1.3.296.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.3.296.0.tar.gz"
+    sha256: "1e872a0be3890784bbe68dcd89b7e017fed77ba95820841848718c98bda6dc33"
+  "1.3.290.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.3.290.0.tar.gz"
+    sha256: "5b186e1492d97c44102fe858fb9f222b55524a8b6da940a8795c9e326ae6d722"
+  "1.3.268.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.3.268.0.tar.gz"
+    sha256: "94993cbe2b1a604c0d5d9ea37a767e1aba4d771d2bfd4ddceefd66243095164f"
+vulkan-loader:
+  "1.4.304.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/v1.4.304.tar.gz"
+    sha256: "368d8281604a3f4dee038bfcc55c44e305031ec67f6e3fdd50cdeb83586c99f9"
+  "1.3.296.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/v1.3.296.tar.gz"
+    sha256: "682d5323cf31308402c888599b375ebf15810f95d6d1a08ad2f525766becf99b"
+  "1.3.290.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/v1.3.290.tar.gz"
+    sha256: "a1f0d80c4ee448d4fa37d1d4a4c4cf1d6d0f5873d3ca6dffe2a9498e6e654142"
+  "1.3.268.0":
+    url: "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.3.268.0.tar.gz"
+    sha256: "404fa621f1ab2731bcc68bcbff64d8c6de322faad2d87f9198641bd37255fd39"
+flatbuffers:
+  "24.12.23":
+    url: "https://github.com/google/flatbuffers/archive/v24.12.23.tar.gz"
+    sha256: "7e2ef35f1af9e2aa0c6a7d0a09298c2cb86caf3d4f58c0658b306256e5bcab10"
+freetype:
+  "2.12.1":
+    url:
+      - "https://download.savannah.gnu.org/releases/freetype/freetype-2.12.1.tar.xz"
+      - "https://sourceforge.net/projects/freetype/files/freetype2/2.12.1/freetype-2.12.1.tar.xz"
+    sha256: "4766f20157cc4cf0cd292f80bf917f92d1c439b243ac3018debf6b9140c41a7f"
+perfetto:
+  "48.1":
+    url: "https://github.com/google/perfetto/archive/refs/tags/v48.1.tar.gz"
+    sha256: "8d1c6bf44f1bdb098ab70cd60da3ce6b6e731e4eb21dd52b2527cbdcf85d984d"
+  "48.1-shared":
+    url: "https://github.com/google/perfetto/archive/refs/tags/v48.1.tar.gz"
+    sha256: "8d1c6bf44f1bdb098ab70cd60da3ce6b6e731e4eb21dd52b2527cbdcf85d984d"
+  "50.1":
+    url: "https://github.com/google/perfetto/archive/refs/tags/v50.1.tar.gz"
+    sha256: "c2230d04790eb50231a58616a3f1ff6dcf772d8e220333a7711605f99c5c6db9"
+  "50.1-shared":
+    url: "https://github.com/google/perfetto/archive/refs/tags/v50.1.tar.gz"
+    sha256: "c2230d04790eb50231a58616a3f1ff6dcf772d8e220333a7711605f99c5c6db9"

@@ -1,0 +1,11 @@
+#!/bin/bash
+export ANDROID_NDK=/Users/zhangsc/Library/Android/sdk/ndk/21.4.7075529/
+export CMAKE_COMMAND_COMMON=""
+# for android
+export CMAKE_COMMAND_COMMON="${CMAKE_COMMAND_COMMON} -Dframework_DIR=/Users/zhangsc/Dependence/android/lib/cmake/framework" # for super build
+# for native
+# export CMAKE_COMMAND_COMMON="${CMAKE_COMMAND_COMMON} -Dframework_DIR=/Users/zhangsc/Dependence/native/lib/cmake/framework" # for super build
+export INSTALL_PARENT_DIR="/Users/zhangsc/Dependence"
+export OBFUSCATE_BIN=~/Workplace/framework/build_native/apps/obfuscate
+# bash obfscate.sh
+bash compile.sh $@

@@ -1,0 +1,2 @@
+copy to ~/.conan2/extensions/commands
+use conan -h to see the new commands

@@ -1,0 +1,56 @@
+#ifndef @EXPORT_BASENAME@_ENV_EXPORT_H_
+#define @EXPORT_BASENAME@_ENV_EXPORT_H_
+
+// Generic helper definitions for shared library support
+#if defined _WIN32 || defined __CYGWIN__
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_IMPORT __declspec(dllimport)
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_EXPORT __declspec(dllexport)
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_LOCAL
+  #define @EXPORT_BASENAME@_HELPER_DEPRECATED __declspec(deprecated)
+  #define @EXPORT_BASENAME@_HELPER_CALL __cdecl
+#else
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_IMPORT __attribute__ ((visibility ("default")))
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_EXPORT __attribute__ ((visibility ("default")))
+  #define @EXPORT_BASENAME@_HELPER_SHARED_LIBS_LOCAL  __attribute__ ((visibility ("hidden")))
+  #define @EXPORT_BASENAME@_HELPER_DEPRECATED __attribute__((__deprecated__))
+  #define @EXPORT_BASENAME@_HELPER_CALL
+#endif
+
+// Now we use the generic helper definitions above to define @EXPORT_BASENAME@_API and @EXPORT_BASENAME@_LOCAL.
+// @EXPORT_BASENAME@_API is used for the public API symbols. It either DLL imports or DLL exports (or does nothing for static build)
+// @EXPORT_BASENAME@_LOCAL is used for non-api symbols.
+
+#ifdef @EXPORT_BASENAME@_SHARED_LIBS
+  #ifdef @EXPORT_BASENAME@_SHARD_LIBS_EXPORTS // defined if we are building the @EXPORT_BASENAME@ Shared Libs (instead of using it)
+    #define @EXPORT_BASENAME@_API @EXPORT_BASENAME@_HELPER_SHARED_LIBS_EXPORT
+  #else
+    #define @EXPORT_BASENAME@_API @EXPORT_BASENAME@_HELPER_SHARED_LIBS_IMPORT
+  #endif
+  #define @EXPORT_BASENAME@_LOCAL @EXPORT_BASENAME@_HELPER_SHARED_LIBS_LOCAL
+#else
+  #define @EXPORT_BASENAME@_API
+  #define @EXPORT_BASENAME@_LOCAL
+#endif
+
+#define @EXPORT_BASENAME@_DEPRECATED @EXPORT_BASENAME@_HELPER_DEPRECATED
+#define @EXPORT_BASENAME@_CALL @EXPORT_BASENAME@_HELPER_CALL
+
+// extern C
+#ifdef __cplusplus
+#define @EXPORT_BASENAME@_EXTERN_C_BEGIN extern "C" {
+#define @EXPORT_BASENAME@_EXTERN_C_END }
+#define @EXPORT_BASENAME@_EXTERN_C extern "C"
+#else
+#define @EXPORT_BASENAME@_EXTERN_C_BEGIN
+#define @EXPORT_BASENAME@_EXTERN_C_END
+#define @EXPORT_BASENAME@_EXTERN_C
+#endif
+
+// inline
+#if defined(Xrlinux)
+#define @EXPORT_BASENAME@_FORCE_INLINE inline __attribute__ ((always_inline))
+#else
+#define @EXPORT_BASENAME@_FORCE_INLINE inline
+#endif
+
+#endif // @EXPORT_BASENAME@_ENV_EXPORT_H_

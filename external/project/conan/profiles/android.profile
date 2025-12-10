@@ -1,0 +1,12 @@
+[settings]
+arch=armv8
+build_type=Release
+compiler=clang
+compiler.cppstd=17
+compiler.libcxx=c++_static
+compiler.version=14
+os=Android
+os.api_level=26
+[tool_requires]
+cmake/3.25.3
+android-ndk/r25c

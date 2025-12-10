@@ -361,7 +361,7 @@ void RunServer(const std::string &server_address, const std::string &save_dir) {
 }
 
 int main(int argc, char **argv) {
-  std::string server_address = "169.254.2.10:50051";
+  std::string server_address = "127.0.0.1:50051";
   std::string save_dir = "./grpc_received_data";
 
   // 解析命令行参数
@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
       std::cout << "Usage: " << argv[0] << " [OPTIONS]\n"
                 << "Options:\n"
                 << "  -a, --address <addr>  Server address (default: "
-                   "169.254.2.1:50051)\n"
+                   "127.0.0.1:50051)\n"
                 << "  -d, --dir <path>      Save directory (default: "
                    "./grpc_received_data)\n"
                 << "  -h, --help            Show this help message\n"

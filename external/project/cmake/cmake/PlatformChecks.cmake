@@ -1,0 +1,10 @@
+include(CheckIncludeFiles)
+include(CheckFunctionExists)
+include(CheckLibraryExists)
+include(CheckSymbolExists)
+include(CheckTypeSize)
+include(CheckCSourceCompiles)
+include(CheckCXXSourceCompiles)
+include(CheckCXXCompilerFlag)
+
+# check_symbol_exists( __PRETTY_FUNCTION__	""		PROJECT_HAVE_PRETTY_FUNCTION_MACRO )

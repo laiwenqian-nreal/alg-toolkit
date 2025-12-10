@@ -27,7 +27,7 @@ int main() {
       float y = i * 1.0;
       float z = i * 1.5;
 
-      gyro_values.onsensor_timestamp_us = get_current_timestamp_us();
+      //gyro_values.onsensor_timestamp_us = get_current_timestamp_us();
       gyro_values.timestamp_ns = (uint64_t)i * 1000000; // 模拟纳秒时间戳
       gyro_values.type =
           DumpSensorType::DUMP_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED; // 示例类型
@@ -39,7 +39,7 @@ int main() {
       gyro_values.data[5] = 0;
 
       RawImuDataDumpStruct accel_values;
-      accel_values.onsensor_timestamp_us = get_current_timestamp_us();
+      //accel_values.onsensor_timestamp_us = get_current_timestamp_us();
       accel_values.timestamp_ns = (uint64_t)i * 1000000; // 模拟纳秒时间戳
       accel_values.type = DumpSensorType::
           DUMP_SENSOR_TYPE_ACCELEROMETER_UNCALIBRATED; // 示例类型

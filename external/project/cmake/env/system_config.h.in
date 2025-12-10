@@ -1,0 +1,66 @@
+#ifndef @SYSTEM_CONFIG_BASENAME@_ENV_SYSTEM_CONFIG_H_
+#define @SYSTEM_CONFIG_BASENAME@_ENV_SYSTEM_CONFIG_H_
+
+#if defined(__ANDROID__)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_ANDROID 1
+#endif
+
+#if defined(__CYGWIN__)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_CYGWIN 1
+#endif
+
+#if (defined(__APPLE__) && defined(__MACH__))
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_APPLE 1
+#include <TargetConditionals.h>
+#if TARGET_OS_SIMULATOR || TARGET_OS_IOS
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_IOS 1
+#elif TARGET_OS_MAC
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_MACOS 1
+#else
+#   error "Unknown Apple platform"
+#endif
+#endif
+
+#if defined(_WIN32) || defined(WIN32) || defined(__NT__) || defined(__WIN32__)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_WINDOWS 1
+#if defined(_WIN64)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_WIN64 1
+#else
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_WIN32 1
+#endif
+#endif
+
+#if defined(_WIN64) || defined(__LP64__)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_64 1
+#endif
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_UNIX 1
+#endif
+
+#if defined(_MSC_VER)
+#define @SYSTEM_CONFIG_BASENAME@_COMPILER_MSVC 1
+#endif
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define @SYSTEM_CONFIG_BASENAME@_COMPILER_MINGW 1
+#endif
+
+#if defined(linux) || defined(__linux__)
+#ifndef @SYSTEM_CONFIG_BASENAME@_SYSTEM_ANDROID
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_LINUX 1
+#endif
+#endif
+
+#if defined(Xrlinux)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_XRLINUX 1
+#endif
+
+#if defined(@SYSTEM_CONFIG_BASENAME@_SYSTEM_UNIX) || defined(@SYSTEM_CONFIG_BASENAME@_SYSTEM_APPLE) || defined(@SYSTEM_CONFIG_BASENAME@_SYSTEM_ANDROID)
+#include <unistd.h>
+#if defined(_POSIX_VERSION)
+#define @SYSTEM_CONFIG_BASENAME@_SYSTEM_POSIX 1
+#endif
+#endif
+
+#endif // @SYSTEM_CONFIG_BASENAME@_ENV_SYSTEM_CONFIG_H_

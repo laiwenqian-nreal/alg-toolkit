@@ -152,8 +152,10 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
                  log_prefix, msg_header.magic, msg_header.msg_id);
     }
 
-    curDataPtr += msg_header.payload_length;
-    curLen -= msg_header.payload_length;
+    // curDataPtr += msg_header.payload_length;
+    // curLen -= msg_header.payload_length;
+    curDataPtr += sizeof(SimpleMessageHeader) + msg_header.payload_length;
+    curLen -= sizeof(SimpleMessageHeader) + msg_header.payload_length;
   }
 
   return true;

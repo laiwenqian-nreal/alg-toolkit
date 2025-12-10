@@ -1,0 +1,14 @@
+[settings]
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.cppstd=17
+compiler.libcxx=libc++
+compiler.version=14
+os=Windows
+[conf]
+tools.cmake.cmaketoolchain:system_name=Windows
+tools.cmake.cmaketoolchain:system_processor=x86_64
+[tool_requires]
+cmake/3.25.3
+mingw/20220323

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# 用 `` 可以将命令的输出结果赋值给变量
+# 获取当前提交的 commit msg
+commit_msg=`cat $1`
+
+msg_re="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,100}"
+
+if [[ ! $commit_msg =~ $msg_re ]]
+then
+    echo "\n不合法的 commit 消息提交格式，请使用正确的格式，例如：\
+    \nfeat: add comments\
+    \nfix: handle events on blur (close #28)\
+	\n详情请查看 git commit 提交规范（飞书文档）: 知识库 - NRSDK开发 - 工程规范 - Git提交信息规范"
+
+    # 异常退出
+    exit 1
+fi
+
+# 获取用户 email
+email=`git config user.email`
+email_re="@xreal\.com"
+#if [[ ! $email =~ $email_re ]]
+#then
+    # echo "此用户没有权限，具有权限的用户为：xxx@xreal.com，请使用git config user.email配置"
+
+    # 异常退出
+    # exit 1
+#fi

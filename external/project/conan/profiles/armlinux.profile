@@ -1,0 +1,11 @@
+[settings]
+arch=armv8
+build_type=Release
+compiler=gcc
+compiler.cppstd=17
+compiler.libcxx=libstdc++11
+compiler.version=7.5
+os=Linux
+[tool_requires]
+cmake/3.25.3
+gcc/7.5.0

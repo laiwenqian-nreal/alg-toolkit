@@ -25,7 +25,7 @@ int main() {
         for (int i = 0; i <= 20; ++i) {
             // 准备 RawImuData
             RawImuDataDumpStruct imu_data;
-            imu_data.onsensor_timestamp_us = get_current_timestamp_us();
+            //imu_data.onsensor_timestamp_us = get_current_timestamp_us();
             imu_data.timestamp_ns = get_current_timestamp_ns();
             imu_data.type = DumpSensorType::DUMP_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED;
             imu_data.data[0] = i * 0.5f;

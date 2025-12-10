@@ -27,7 +27,8 @@ typedef void (*SendGRPCImageDataFun)(uint64_t onsensor_timestamp_us,
 
 int main(int argc, char **argv) {
   // 1. 加载动态库,括号里面的路径根据实际情况调整
-  void *handle = framework::util::LibraryOpen("libsend_grpc.so");
+
+  void *handle = framework::util::LibraryOpen("../toolkit/interface/libsend_grpc.so");
   if (!handle) {
     std::cout << "Failed to load dynamic library: " << dlerror() << std::endl;
     return 1;
@@ -70,25 +71,25 @@ int main(int argc, char **argv) {
       buf[j] = static_cast<uint8_t>(j % 256);
     SendGRPCBinaryData(i, i, len, buf);
 
-    std::ostringstream oss;
-    oss << "m" << std::setw(7) << std::setfill('0') << i << ".pgm";
-    std::string filename = oss.str();
-    char abs_src[PATH_MAX];
-    if (!realpath(__FILE__, abs_src))
-      throw std::runtime_error("realpath(__FILE__) failed");
-    char dirbuf[PATH_MAX];
-    std::snprintf(dirbuf, sizeof(dirbuf), "%s", abs_src);
-    char *src_dir = dirname(dirbuf);
-    std::string full_path = std::string(src_dir) + "/images/" + filename;
-    std::ifstream f(full_path, std::ios::binary | std::ios::ate);
-    if (!f)
-      throw std::runtime_error("open failed");
-    std::streamsize n = f.tellg();
-    f.seekg(0);
-    std::string buffer(n, '\0');
-    f.read(&buffer[0], n);
-    SendGRPCImageData(i, i, const_cast<char*>(filename.data()), filename.size(), 
-                      const_cast<char*>(buffer.data()), buffer.size());
+    // std::ostringstream oss;
+    // oss << "m" << std::setw(7) << std::setfill('0') << i << ".pgm";
+    // std::string filename = oss.str();
+    // char abs_src[PATH_MAX];
+    // if (!realpath(__FILE__, abs_src))
+    //   throw std::runtime_error("realpath(__FILE__) failed");
+    // char dirbuf[PATH_MAX];
+    // std::snprintf(dirbuf, sizeof(dirbuf), "%s", abs_src);
+    // char *src_dir = dirname(dirbuf);
+    // std::string full_path = std::string(src_dir) + "/images/" + filename;
+    // std::ifstream f(full_path, std::ios::binary | std::ios::ate);
+    // if (!f)
+    //   throw std::runtime_error("open failed");
+    // std::streamsize n = f.tellg();
+    // f.seekg(0);
+    // std::string buffer(n, '\0');
+    // f.read(&buffer[0], n);
+    // SendGRPCImageData(i, i, const_cast<char*>(filename.data()), filename.size(), 
+    //                   const_cast<char*>(buffer.data()), buffer.size());
 
     // 间隔一段时间
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
