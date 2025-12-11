@@ -27,7 +27,7 @@ uint64_t get_current_timestamp_us();
 uint64_t get_current_timestamp_ns();
 
 // 公共数据结构 - 简化版本，只保留必要的结构
-#pragma pack(1)
+#pragma pack(push, 1)
 // TCP消息头 - 保留用于网络传输
 typedef struct TcpMsgHeader {
   uint8_t version;          // version=1
@@ -65,7 +65,7 @@ struct SimpleMessageHeader {
   uint32_t payload_length;
   uint64_t time_stamp;
 };
-#pragma pack()
+#pragma pack(pop)
 
 // 公共枚举
 enum MsgContentType : uint8_t { SENSOR_DATA = 1 };

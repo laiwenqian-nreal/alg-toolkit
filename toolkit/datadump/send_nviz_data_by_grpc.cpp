@@ -125,7 +125,7 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
               ->total_size;
       if (msg_header.payload_length >= expected_size) {
         RawLatencyDataDumpStruct *data =
-            reinterpret_cast<RawLatencyDataDumpStruct *>(curDataPtr);
+            reinterpret_cast<RawLatencyDataDumpStruct *>(payload_ptr);
         // onsensor timestamp 使用消息头中的 time_stamp
         success = sendLatencyData(msg_header.magic, msg_header.msg_id,
                                   msg_header.time_stamp, data, expected_size);
@@ -138,12 +138,12 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
     } else if (msg_header.msg_id == DUMP_MESSAGE_ID_IMAGE_DATA) {
       // 灰度图数据: 使用 ImageData
       success = sendImageData(msg_header.magic, msg_header.msg_id,
-                              msg_header.time_stamp, curDataPtr,
+                              msg_header.time_stamp, payload_ptr,
                               msg_header.payload_length);
     } else {
       // 默认使用 BinaryData (包括 DUMP_MESSAGE_ID_BINARY_DATA)
       success = sendBinaryData(msg_header.magic, msg_header.msg_id,
-                               msg_header.time_stamp, curDataPtr,
+                               msg_header.time_stamp, payload_ptr,
                                msg_header.payload_length);
     }
 
@@ -160,6 +160,7 @@ bool XrealLinkgRPC::sendMsg(DataBuffer msg) {
 
   return true;
 }
+
 
 bool XrealLinkgRPC::sendRawImuData(uint32_t group_id, uint32_t msg_id,
                                    uint64_t onsensor_timestamp_us,

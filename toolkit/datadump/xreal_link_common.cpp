@@ -246,7 +246,7 @@ void XrealLinkCommon::publishQueueSizeInfo(
 
   // 直接创建SimpleMessageHeader并调用processGroupMsg
   SimpleMessageHeader msg_header_count;
-  msgInit(msg_header_count, XREAL_LINK_COUNT_GROUP_ID, 1, sizeof(QueueSizeData),
+  msgInit(msg_header_count, XREAL_LINK_COUNT_GROUP_ID, 11, sizeof(QueueSizeData),
           0); // msg_id=11 for queue count info
   // 创建完整的消息缓冲区
   DataBuffer queue_count_data;

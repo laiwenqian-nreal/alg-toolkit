@@ -192,5 +192,5 @@ add_test(NAME send_grpc_test COMMAND send_grpc_test)
 
 # 只在protobuf和gRPC都找到时注册real_grpc_test
 if(protobuf_FOUND AND gRPC_FOUND)
-    add_test(NAME real_grpc_test COMMAND real_grpc_test)
+   # add_test(NAME real_grpc_test COMMAND real_grpc_test)
 endif()

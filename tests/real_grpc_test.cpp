@@ -22,7 +22,7 @@ int main() {
         XrealLinkgRPC::getInstance(target);
 
         // 发送测试数据
-        for (int i = 0; i <= 20; ++i) {
+        for (int i = 0; i <= 50; ++i) {
             // 准备 RawImuData
             RawImuDataDumpStruct imu_data;
             //imu_data.onsensor_timestamp_us = get_current_timestamp_us();
@@ -56,6 +56,23 @@ int main() {
                 9999, // msg_id = 9999 表示通用二进制数据
                 binary_data.data(),
                 binary_data.size()
+            );
+
+            RawLatencyDataDumpStruct latency_data;
+            latency_data.timestamp_ns = get_current_timestamp_ns();
+            latency_data.type = DumpSensorType::DUMP_SENSOR_TYPE_IMU_LATENCY;
+            latency_data.data[0] = i * 1.1f;
+            latency_data.data[1] = i * 1.2f;
+            latency_data.data[2] = i * 1.3f;
+            latency_data.data[3] = 0.0f;
+            latency_data.data[4] = 0.0f;
+            latency_data.data[5] = 0.0f;
+
+            XrealLinkgRPC::linkSendStatus(
+                3, // group_id
+                25, // msg_id = 25 表示 Latency 数据
+                reinterpret_cast<const uint8_t*>(&latency_data),
+                sizeof(latency_data)
             );
 
             std::cout << "Sent message " << i << std::endl;

@@ -51,20 +51,23 @@ enum DumpMessageID {
   DUMP_MESSAGE_ID_BINARY_DATA = 9999,
   DUMP_MESSAGE_ID_IMAGE_DATA = 401,
 };
-
+#pragma pack(push, 1)
 // 原始 IMU 数据结构
 struct RawImuDataDumpStruct {
   uint64_t timestamp_ns;
   uint32_t type;
   float data[6];
 };
+#pragma pack(pop)
 
+#pragma pack(push, 1)
 // Latency 数据结构 - 使用 uint64_t 避免精度损失
 struct RawLatencyDataDumpStruct {
   uint64_t timestamp_ns;
   uint32_t type;
   uint64_t data[6]; // 使用 uint64_t 保存时间戳，避免精度损失
 };
+#pragma pack(pop)
 
 } // namespace datadump
 } // namespace toolkits
