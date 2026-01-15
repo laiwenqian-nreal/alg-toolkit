@@ -62,6 +62,26 @@ MY_API void SendGRPCImageData(uint64_t onsensor_timestamp_us,
   XrealLinkgRPC::linkSendStatus(3, 401, (const uint8_t *)buf_name, buf_size);
 }
 
+// 发送延迟数据
+MY_API void SendGRPCLatencyData(uint64_t onsensor_timestamp_us,
+                               uint64_t timestamp_ns, uint32_t type,
+                               uint64_t data_1, uint64_t data_2, uint64_t data_3,
+                               uint64_t data_4, uint64_t data_5, uint64_t data_6) {
+  // 构建 RawLatencyDataDumpStruct 结构
+  RawLatencyDataDumpStruct latency_data;
+  latency_data.timestamp_ns = timestamp_ns;
+  latency_data.type = type;
+  latency_data.data[0] = data_1;
+  latency_data.data[1] = data_2;
+  latency_data.data[2] = data_3;
+  latency_data.data[3] = data_4;
+  latency_data.data[4] = data_5;
+  latency_data.data[5] = data_6;
+  
+  // 发送数据到 gRPC
+  XrealLinkgRPC::linkSendStatus(3, 25, (const uint8_t *)&latency_data, sizeof(latency_data));
+}
+
 // 发送数据
 MY_API void SendGRPCData(int group_id, int msg_id, const uint8_t *data,
                          uint64_t len) {

@@ -181,10 +181,10 @@ void XrealLinkCommon::CollectThread() {
                          complete_msg.end());
       } else {
 
-        // 在发送数据前，添加队列大小信息
-        publishQueueSizeInfo(getCollectQueueSize(), getSendQueueSize(),
-                             group_id, get_current_timestamp_us(),
-                             current_timestamp_ns, freq_count, group_msg);
+        // // 在发送数据前，添加队列大小信息
+        // publishQueueSizeInfo(getCollectQueueSize(), getSendQueueSize(),
+        //                      group_id, get_current_timestamp_us(),
+        //                      current_timestamp_ns, freq_count, group_msg);
 
         // 发送累积的数据
         processGroupMsg(group_msg, freq_count, current_timestamp_ns, packet_id);
@@ -206,11 +206,29 @@ void XrealLinkCommon::CollectThread() {
       processed_data = true;
     }
 
+        // 处理剩余的消息
+    if (!group_msg.empty()) {
+      uint64_t current_timestamp_ns = get_current_timestamp_ns();
+      
+      // 发送剩余的消息
+      processGroupMsg(group_msg, freq_count, current_timestamp_ns, packet_id);
+      
+      packet_id++;
+      
+      DLOG_INFO(
+          "{} packet_msg packet_id:{} freq_count:{} "
+          "header.timestamp_ns:{}, collect_queue_size:{}, send_queue_size:{}",
+          log_prefix, packet_id, freq_count, current_timestamp_ns,
+          getCollectQueueSize(), getSendQueueSize());
+      
+      group_msg.clear();
+    }
     // 如果队列为空，短暂休眠避免忙等待
     if (!processed_data) {
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
   }
+
 }
 
 size_t XrealLinkCommon::getSendQueueSize() const {
