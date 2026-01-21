@@ -11,7 +11,6 @@
 #include <unistd.h> // realpath
 
 #include <framework/util/dlutil.h>
-
 typedef void (*GRPCMakeStubFun)(char *target_name, size_t target_size);
 typedef void (*SendGRPCRawImuDataFun)(uint64_t onsensor_timestamp_us,
                                       uint64_t timestamp_ns, uint32_t type,
@@ -28,6 +27,12 @@ typedef void (*SendGRPCLatencyDataFun)(uint64_t onsensor_timestamp_us,
                                       uint64_t timestamp_ns, uint32_t type,
                                       uint64_t data_1, uint64_t data_2, uint64_t data_3,
                                       uint64_t data_4, uint64_t data_5, uint64_t data_6);
+
+uint64_t get_current_timestamp_ns() {
+    struct timespec cur_time;
+    clock_gettime(CLOCK_MONOTONIC, &cur_time);
+    return (uint64_t)cur_time.tv_sec * 1000000000 + (uint64_t)cur_time.tv_nsec;
+}
 
 // 生成简单的PNG图像数据（假数据）
 std::vector<uint8_t> generate_fake_png(int width = 64, int height = 64) {
@@ -137,37 +142,38 @@ int main(int argc, char **argv) {
   GRPCMakeStub(const_cast<char*>(target.data()), target.size());
 
   // 这里i受限于images目录中的pgm图片数量
-  for (int i = 0; i <= 20; ++i) {
+  for (int i = 0; i <= 200000000; ++i) {
     // 发送IMU数据
-    SendGRPCRawImuData(i, i, 1, i * 0.5, i * 1.0, i * 1.5, 0, 0, 0);
+    uint64_t timestamp_ns = get_current_timestamp_ns();
+    SendGRPCRawImuData(i, timestamp_ns, 1, i * 0.5, i * 1.0, i * 1.5, i * 2.0, i * 2.5, i * 3.0);
 
     // 发送二进制数据
-    size_t len = 1024 * 100;
-    uint8_t buf[1024 * 100];
-    for (size_t j = 0; j < len; j++)
-      buf[j] = static_cast<uint8_t>(j % 256);
-    SendGRPCBinaryData(i, i, len, buf);
+    // size_t len = 1024 * 100;
+    // uint8_t buf[1024 * 100];
+    // for (size_t j = 0; j < len; j++)
+    //   buf[j] = static_cast<uint8_t>(j % 256);
+    // SendGRPCBinaryData(i, i, len, buf);
 
     // 发送图像数据（使用生成的假PNG数据）
-    std::vector<uint8_t> fake_png_data = generate_fake_png(128, 128);
-    std::string filename = "fake_image_" + std::to_string(i) + ".png";
-    SendGRPCImageData(i, i, const_cast<char*>(filename.data()), filename.size(), 
-                      reinterpret_cast<char*>(fake_png_data.data()), fake_png_data.size());
+    // std::vector<uint8_t> fake_png_data = generate_fake_png(128, 128);
+    // std::string filename = "fake_image_" + std::to_string(i) + ".png";
+    // SendGRPCImageData(i, i, const_cast<char*>(filename.data()), filename.size(), 
+    //                   reinterpret_cast<char*>(fake_png_data.data()), fake_png_data.size());
     
     // 发送延迟数据
-    if (SendGRPCLatencyData) {
-        // 生成一些合理的延迟数据（纳秒）
-        uint64_t delay_1 = 1000000 + i * 10000;  // 1ms + i*10us
-        uint64_t delay_2 = 2000000 + i * 20000;  // 2ms + i*20us
-        uint64_t delay_3 = 3000000 + i * 30000;  // 3ms + i*30us
-        uint64_t delay_4 = 4000000 + i * 40000;  // 4ms + i*40us
-        uint64_t delay_5 = 5000000 + i * 50000;  // 5ms + i*50us
-        uint64_t delay_6 = 6000000 + i * 60000;  // 6ms + i*60us
-        SendGRPCLatencyData(i, i, 1, delay_1, delay_2, delay_3, delay_4, delay_5, delay_6);
-    }
+    // if (SendGRPCLatencyData) {
+    //     // 生成一些合理的延迟数据（纳秒）
+    //     uint64_t delay_1 = 1000000 + i * 10000;  // 1ms + i*10us
+    //     uint64_t delay_2 = 2000000 + i * 20000;  // 2ms + i*20us
+    //     uint64_t delay_3 = 3000000 + i * 30000;  // 3ms + i*30us
+    //     uint64_t delay_4 = 4000000 + i * 40000;  // 4ms + i*40us
+    //     uint64_t delay_5 = 5000000 + i * 50000;  // 5ms + i*50us
+    //     uint64_t delay_6 = 6000000 + i * 60000;  // 6ms + i*60us
+    //     SendGRPCLatencyData(i, i, 1, delay_1, delay_2, delay_3, delay_4, delay_5, delay_6);
+    // }
 
     // 间隔一段时间
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
   std::cout << "Protobuf + gRPC send test completed!" << std::endl;
 }

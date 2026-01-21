@@ -40,9 +40,9 @@ public:
     received_count_ = 0;
 
     // 初始化发布者 - 为不同数据类型创建不同的 topic
-    imu_publisher_ = std::make_shared<Publisher>("grpc/imu");
+    imu_publisher_ = std::make_shared<Publisher>("/data/imu");
     latency_publisher_ = std::make_shared<Publisher>("grpc/latency");
-    image_publisher_ = std::make_shared<Publisher>("grpc/image");
+    image_publisher_ = std::make_shared<Publisher>("/data/image");
     binary_publisher_ = std::make_shared<Publisher>("grpc/binary");
 
     std::cout << "  IMU Publisher on port: " << imu_publisher_->getPort() << std::endl;
@@ -84,12 +84,12 @@ public:
 
     // 创建 IMU 消息并发布
     auto imu_msg = std::make_shared<ImuMessage>(
-        "grpc/imu", timestamp_ns, type, data[0], data[1], data[2], data[3],
+        "/data/imu", timestamp_ns, type, data[0], data[1], data[2], data[3],
         data[4], data[5]);
 
     try {
       imu_publisher_->publish(imu_msg);
-      std::cout << "  Published to grpc/imu topic" << std::endl;
+      std::cout << "  Published to /data/imu topic" << std::endl;
     } catch (const std::exception &e) {
       std::cerr << "  Error publishing IMU message: " << e.what() << std::endl;
       response->set_note("Failed to publish IMU data");
@@ -202,11 +202,11 @@ public:
               << std::endl;
 
     // 创建图像消息并发布
-    auto image_msg = std::make_shared<ImageMessage>("grpc/image", image_data);
+    auto image_msg = std::make_shared<ImageMessage>("/data/image", image_data);
 
     try {
       image_publisher_->publish(image_msg);
-      std::cout << "  Published to grpc/image topic" << std::endl;
+      std::cout << "  Published to /data/image topic" << std::endl;
     } catch (const std::exception &e) {
       std::cerr << "  Error publishing Image message: " << e.what() << std::endl;
       response->set_note("Failed to publish Image data");
